@@ -6,19 +6,41 @@ completion and approval from another member of the household before the work
 counts.
 
 Chores are scheduled onto a calendar and assigned automatically, with a
-one-line explanation of why each person got each chore.
+one-line explanation of why each person got each chore. Approved work builds a
+per-person score that resets monthly, and every correction — a rejection, an
+effort override, a reassignment — is added to an append-only history rather
+than overwriting what came before.
 
-## Status
+Full scope, including what is deliberately excluded, is in
+[_docs/plan.md](_docs/plan.md).
 
-Early. The project scaffold is in place; feature work has not started. See
-[_docs/backlog.md](_docs/backlog.md) for the task list and progress.
+## Current state
+
+Scaffolding only. **No features are implemented yet** — running the app serves
+a placeholder page, not a working chore tracker.
+
+What exists today:
+
+- Django project (`config`) and a single domain app (`chores`)
+- A custom user model, in place from the first migration
+- Authentication wired up via django-allauth
+- Environment-driven settings, SQLite by default
+- pytest and ruff configured, with one smoke test
+
+Work is tracked as [GitHub issues](../../issues) — 34 tasks across 7 phase
+milestones, of which 1 is done. The same list, with progress, is in
+[_docs/backlog.md](_docs/backlog.md).
+
+The next task is issue #2, Household and membership.
 
 ## Requirements
 
 - Python 3.13
 - [uv](https://docs.astral.sh/uv/)
 
-## Getting started
+No database server is needed yet; the project uses SQLite.
+
+## Running it
 
 Install dependencies:
 
@@ -26,52 +48,71 @@ Install dependencies:
 uv sync
 ```
 
-Copy the environment template and adjust if needed:
+Create your environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-This step is required. `DEBUG` defaults to `False`, and Django refuses to start
-with `DEBUG=False` and an empty `ALLOWED_HOSTS` — the resulting error mentions
-`ALLOWED_HOSTS` rather than the missing file.
+This step is required, not optional. `DEBUG` defaults to `False`, and Django
+refuses to start with `DEBUG=False` and an empty `ALLOWED_HOSTS` — the error
+names `ALLOWED_HOSTS` rather than the missing `.env`, so it is easy to
+misdiagnose.
 
-Apply migrations and start the server:
+Apply migrations:
 
 ```bash
 uv run python manage.py migrate
 ```
 
+Start the server:
+
 ```bash
 uv run python manage.py runserver
 ```
 
-The app is then at http://127.0.0.1:8000/.
+The app is then at http://127.0.0.1:8000/, currently showing the placeholder
+page. To look at the admin, create a superuser first:
 
-## Running tests
+```bash
+uv run python manage.py createsuperuser
+```
+
+The admin is at http://127.0.0.1:8000/admin/. Only users are registered so
+far; the domain models arrive with issue #13.
+
+## Tests and linting
 
 ```bash
 uv run pytest
 ```
 
-Linting and formatting use ruff:
-
 ```bash
 uv run ruff check .
 ```
 
+```bash
+uv run ruff format .
+```
+
 ## Documentation
 
-- [_docs/plan.md](_docs/plan.md) — scope, design decisions, and what is
-  deliberately excluded
-- [_docs/backlog.md](_docs/backlog.md) — ordered task list with progress
-- [_docs/process.md](_docs/process.md) — how work is organized
-- [AGENTS.md](AGENTS.md) — instructions for coding agents
+- [_docs/plan.md](_docs/plan.md) — scope, design decisions, and deliberate
+  exclusions
+- [_docs/backlog.md](_docs/backlog.md) — the 34 tasks, in order, with progress
+- [_docs/process.md](_docs/process.md) — how work is organized, and the roles
+- [_docs/team/pm.md](_docs/team/pm.md) — the product manager role, which grooms
+  a task before it is implemented
+- [_docs/task-template.md](_docs/task-template.md) — the shape a groomed issue
+  takes
+- [AGENTS.md](AGENTS.md) — instructions for coding agents. `CLAUDE.md` imports
+  it so Claude Code reads the same file.
 
 ## Notes
 
-The database is SQLite by default, which is fine for local development. Set
-`DATABASE_URL` to use Postgres.
+SQLite is the default and is fine for development. The project moves to
+Postgres when it is deployed, because the web server and the scheduler loop run
+as separate processes writing concurrently.
 
 Uploaded photos are stored on local disk during development and are not
-committed.
+committed. They move to object storage at the same time as Postgres.
