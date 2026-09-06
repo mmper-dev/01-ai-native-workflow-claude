@@ -21,7 +21,8 @@ gaps are deliberate exclusions, listed at the end of both documents.
 
 # Documents
 
-- `_docs/process.md` - how work is organized
+- Before starting any task, read `_docs/process.md` - how work is organized,
+  including the roles and which one to take
 - Before writing tests, read `_docs/testing-guidelines.md`
 - For anything touching the UI, read `_docs/design-system.md`
 
