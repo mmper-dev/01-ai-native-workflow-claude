@@ -7,6 +7,9 @@ Every task is a GitHub issue, and the numbers below are issue numbers. Tick a
 box here in the same change that closes the issue, so status cannot drift from
 the code.
 
+Issues carry an `mvp` or `post-mvp` label, so the MVP can be filtered out of
+the tracker without reading milestones.
+
 ## MVP scope
 
 The MVP is Phase 1: chores are scheduled onto a calendar, assigned
@@ -84,6 +87,11 @@ cannot inflate your score.
 - [ ] #33 AI effort estimation
 - [ ] #34 Showing suggestions safely
 
+**Follow-ups — post-MVP**
+
+- [ ] #36 Removing a member without orphaning history
+- [ ] #37 Every household keeps at least one admin
+
 **Deferred — Approval loop**
 
 - [ ] #15 Choosing an approver and approving
@@ -109,13 +117,18 @@ smoke test that hits a placeholder view and asserts a 200.
 
 ## 2. Household and membership
 
-**Goal:** People can belong to a household, with roles.
+**Goal:** A user can be a member of a household, and that membership can carry
+one or more roles, so later work can ask "who is in this household" and "is
+this person an admin".
 
-**Description:** Add a `Household` model and a `Membership` model joining users
-to households. Membership carries a set of roles rather than a single
-`is_admin` boolean, because the plan leaves open how the admin is chosen and
-whether there can be more than one. Skills and availability are not part of
-this task.
+**Description:** Add a `Household` model, with a name and a timezone, and a
+`Membership` model joining users to households. Membership carries a set of
+roles rather than a single `is_admin` boolean, because the plan leaves open how
+the admin is chosen and whether there can be more than one. Skills and
+availability are not part of this task.
+
+**Groomed** — see [issue #2](../../../issues/2) for acceptance criteria, out of
+scope, and constraints.
 
 ---
 
@@ -485,6 +498,35 @@ nothing.
 user can accept, edit, or ignore, with the admin able to override. Include a
 test that stubs the model call to fail and asserts a chore can still be created
 and used normally. That test is the acceptance criterion for this work.
+
+---
+
+# Follow-ups — post-MVP
+
+Surfaced while grooming other tasks. Not part of any phase; picked up when they
+start to matter.
+
+## 36. Removing a member without orphaning history
+
+**Goal:** A member can leave a household without destroying the record of what
+they did.
+
+**Description:** Membership uses `on_delete=PROTECT`, so a user who has done
+chores cannot be deleted — correct, but it leaves no way to remove someone. Add
+a way to deactivate a membership so the person stops being assigned new chores
+while their completed work, feed entries and past scores stay intact.
+
+---
+
+## 37. Every household keeps at least one admin
+
+**Goal:** A household cannot end up with nobody able to administer it.
+
+**Description:** Nothing stops the last admin role being removed from a
+household, which would leave effort overrides and other admin-only actions
+unreachable. Add a check that prevents removing the final admin, or a rule for
+who inherits it. Related to plan.md's open question about how the admin is
+chosen.
 
 ---
 
