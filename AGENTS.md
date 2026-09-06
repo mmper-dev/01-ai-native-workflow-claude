@@ -19,6 +19,16 @@ gaps are deliberate exclusions, listed at the end of both documents.
 - Do not modify database migrations manually.
 - Run tests after making changes.
 
+# Documents
+
+- `_docs/process.md` - how work is organized
+- Before writing tests, read `_docs/testing-guidelines.md`
+- For anything touching the UI, read `_docs/design-system.md`
+
+Some of these are not written yet. If one is missing, carry on without it and
+use your judgement — a missing file is expected, not an error worth stopping
+or complaining about.
+
 # Setup
 
 Copy `.env.example` to `.env` before running anything. `DEBUG` defaults to
@@ -37,8 +47,12 @@ generated `SECRET_KEY`; never commit it.
 
 # Conventions
 
-- Database is SQLite by default. Set `DATABASE_URL` to use Postgres, which
-  becomes a hard requirement at backlog task 29.
+- Database is SQLite by default. Set `DATABASE_URL` to use Postgres, which the
+  backlog's "Move to Postgres and deploy" task introduces once the web server
+  and the scheduler loop run as separate processes writing concurrently.
+- The backend runs as two processes in production: the web server, and a
+  scheduler loop that generates occurrences and marks them overdue. Never run
+  the loop inside a web worker — it would be duplicated once per worker.
 - `ruff` handles both linting and formatting: `uv run ruff check .` and
   `uv run ruff format .`. Migrations are excluded from both.
 - Tests use `--reuse-db`. Pass `--create-db` after a schema change if a test
