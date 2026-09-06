@@ -14,6 +14,15 @@ than overwriting what came before.
 Full scope, including what is deliberately excluded, is in
 [_docs/plan.md](_docs/plan.md).
 
+## MVP scope
+
+The first milestone is deliberately narrower than the full design. Chores are
+scheduled, assigned and marked done; the approval loop is deferred and the
+completion photo is optional, because a one-person household has nobody to
+review the work. Scoring is unaffected — effort values are fixed on the chore
+rather than self-reported, so marking your own chore done cannot inflate a
+score. [_docs/plan.md](_docs/plan.md) records the deviation in full.
+
 ## Current state
 
 Scaffolding only. **No features are implemented yet** — running the app serves
@@ -27,8 +36,8 @@ What exists today:
 - Environment-driven settings, SQLite by default
 - pytest and ruff configured, with one smoke test
 
-Work is tracked as [GitHub issues](../../issues) — 34 tasks across 7 phase
-milestones, of which 1 is done. The same list, with progress, is in
+Work is tracked as [GitHub issues](../../issues), grouped into phase
+[milestones](../../milestones). The same list, with progress, is in
 [_docs/backlog.md](_docs/backlog.md).
 
 The next task is issue #2, Household and membership.
@@ -99,7 +108,7 @@ uv run ruff format .
 
 - [_docs/plan.md](_docs/plan.md) — scope, design decisions, and deliberate
   exclusions
-- [_docs/backlog.md](_docs/backlog.md) — the 34 tasks, in order, with progress
+- [_docs/backlog.md](_docs/backlog.md) — the ordered task list, with progress
 - [_docs/process.md](_docs/process.md) — how work is organized, and the roles
 - [_docs/team/pm.md](_docs/team/pm.md) — the product manager role, which grooms
   a task before it is implemented

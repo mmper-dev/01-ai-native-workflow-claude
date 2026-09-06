@@ -6,6 +6,28 @@ Households struggle to track who actually did what. Existing chore apps
 mostly answer "whose turn is it"; this tool answers both that and "was it
 actually done", with a verifiable record.
 
+## What the MVP actually builds
+
+This document describes the design in full. The MVP being built deviates from
+it in three places, recorded here so the two are not read as agreeing. The
+ordered task list is in [backlog.md](backlog.md).
+
+- **The approval loop is deferred.** Approval assumes someone other than the
+  assignee is available to review. A one-person household has nobody, which
+  makes approval impossible rather than optional. Marking a chore done is the
+  only completion path in the MVP.
+- **The completion photo is optional**, not required. Without an approver
+  there is nobody to show it to. The field stays, so a household that wants
+  evidence can attach one and requiring it later needs no migration.
+- **Scoring counts completed rather than approved work.** This does not weaken
+  it: effort values are fixed on the chore rather than self-reported at log
+  time, so marking your own chore done still cannot inflate a score.
+
+The consequence is that the MVP answers "whose turn is it" but not "was it
+actually done" - the differentiator named in the Problem section above. That is
+a deliberate trade to get something working, not an oversight. Everything below
+still describes the intended end state.
+
 ## Core concepts
 
 ### Household
@@ -135,15 +157,13 @@ effort values, which moves scores.
 
 ## Build order
 
-Ordered so there's always something demonstrable.
+Superseded by [backlog.md](backlog.md), which is the live order and is tracked
+as GitHub issues.
 
-1. Chore definitions, occurrences, people, logging with photos
-2. Approval, rejection, and the public feed
-3. Scoring
-4. Skills and calendars (data models only)
-5. Scheduler — the largest piece; explanations ship with it
-6. Stretch-learning (depends on 5 and 2)
-7. AI estimation — optional
+The original order here front-loaded the whole verification loop and left the
+scheduler until last. The backlog instead builds a thin end-to-end path first -
+chores scheduled onto a calendar, assigned automatically, shown overdue when
+missed, marked done - so that both halves of the premise are present early
+rather than one being complete and the other absent.
 
-The scheduler is the bulk of the work. Items 1-3 form a usable tool on their
-own if time runs short.
+The scheduler is still the bulk of the work.
