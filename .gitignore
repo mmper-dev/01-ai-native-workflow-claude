@@ -1,0 +1,16 @@
+# Python / uv
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Django
+*.sqlite3
+/media/
+/staticfiles/
+.env
+
+# OS / editors
+.DS_Store
+Thumbs.db
