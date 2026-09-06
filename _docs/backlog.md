@@ -3,75 +3,97 @@
 Derived from [plan.md](plan.md). Each task is sized for a single session and
 written to be handed to someone who has read only the plan and that task.
 
-The order builds a thin end-to-end path first — chores are scheduled onto a
-calendar, assigned automatically, shown as overdue when missed, and completed
-with a photo — then deepens each side. Tasks 1–13 are the demonstrable slice.
+Every task is a GitHub issue, and the numbers below are issue numbers. Tick a
+box here in the same change that closes the issue, so status cannot drift from
+the code.
 
-Each task is a GitHub issue. Tick its box here in the same change that closes
-the issue, so status cannot drift from the code.
+## MVP scope
+
+The MVP is Phase 1: chores are scheduled onto a calendar, assigned
+automatically with a visible reason, shown as overdue when missed, and marked
+done by the assignee.
+
+Two things from plan.md are **not** in it:
+
+- **The approval loop is deferred.** A one-person household has nobody to
+  approve anything, which makes approval impossible rather than merely
+  optional. The work is kept in the Deferred section below rather than dropped.
+- **The completion photo is optional**, not required. Without an approver there
+  is nobody to show it to, but the field stays so a household that wants
+  evidence can attach it.
+
+This means the MVP answers "whose turn is it" but not "was it actually done",
+which plan.md names as the differentiator. That is a deliberate trade to get
+something working, not an oversight. Scoring is unaffected: effort values are
+fixed on the chore rather than self-reported, so marking your own chore done
+cannot inflate your score.
 
 ---
 
 ## Progress
 
-**Phase 1 — Thin end-to-end slice**
+**Phase 1 — MVP**
 
-- [x] 1. Empty project with a passing test
-- [ ] 2. Household and membership
-- [ ] 3. Chore definition model
-- [ ] 4. Chore occurrence with frozen effort values
-- [ ] 5. Occurrence lifecycle and the overdue flag
-- [ ] 6. Generating occurrences from a definition
-- [ ] 7. Round-robin assignment with a reason
-- [ ] 8. Base templates and authentication pages
-- [ ] 9. Chore calendar and detail views
-- [ ] 10. Logging a completion with a photo
-- [ ] 11. Claiming an unassigned chore
-- [ ] 12. Scheduler loop
-- [ ] 13. Django admin registration
+- [x] #1 Empty project with a passing test
+- [ ] #2 Household and membership
+- [ ] #3 Chore definition model
+- [ ] #35 Preloaded chore library
+- [ ] #4 Chore occurrence with frozen effort values
+- [ ] #5 Occurrence lifecycle and the overdue flag
+- [ ] #6 Generating occurrences from a definition
+- [ ] #7 Round-robin assignment with a reason
+- [ ] #8 Base templates and authentication pages
+- [ ] #9 Chore calendar and detail views
+- [ ] #10 Marking a chore done, with an optional photo
+- [ ] #11 Claiming an unassigned chore
+- [ ] #12 Scheduler loop
+- [ ] #13 Django admin registration
 
-**Phase 2 — Verification loop**
+**Phase 2 — History and notifications**
 
-- [ ] 14. Append-only feed model
-- [ ] 15. Choosing an approver and approving
-- [ ] 16. Rejecting a completion
-- [ ] 17. Rejection limit
-- [ ] 18. Admin resolution of stuck chores
-- [ ] 19. Public feed view
-- [ ] 20. Overdue notification
+- [ ] #14 Append-only feed model
+- [ ] #19 Public feed view
+- [ ] #20 Overdue notification
 
 **Phase 3 — Scoring**
 
-- [ ] 21. Score computation with monthly periods
-- [ ] 22. Scoreboard view
-- [ ] 23. Admin effort override
+- [ ] #21 Score computation with monthly periods
+- [ ] #22 Scoreboard view
+- [ ] #23 Admin effort override
 
 **Phase 4 — Real scheduling**
 
-- [ ] 24. Skills
-- [ ] 25. Availability
-- [ ] 26. Stretch-learning opt-in
-- [ ] 27. Eligibility filtering
-- [ ] 28. Effort-based rotation
-- [ ] 29. Deferral when nobody qualifies
+- [ ] #24 Skills
+- [ ] #25 Availability
+- [ ] #26 Stretch-learning opt-in
+- [ ] #27 Eligibility filtering
+- [ ] #28 Effort-based rotation
+- [ ] #29 Deferral when nobody qualifies
 
 **Phase 5 — Stretch learning**
 
-- [ ] 30. Stretch assignment
-- [ ] 31. Granting skills through approval
+- [ ] #30 Stretch assignment
+- [ ] #31 Granting skills on completion of a stretch chore
 
 **Phase 6 — Deployment**
 
-- [ ] 32. Move to Postgres and deploy
+- [ ] #32 Move to Postgres and deploy
 
 **Phase 7 — AI estimation**
 
-- [ ] 33. AI effort estimation
-- [ ] 34. Showing suggestions safely
+- [ ] #33 AI effort estimation
+- [ ] #34 Showing suggestions safely
+
+**Deferred — Approval loop**
+
+- [ ] #15 Choosing an approver and approving
+- [ ] #16 Rejecting a completion
+- [ ] #17 Rejection limit
+- [ ] #18 Admin resolution of stuck chores
 
 ---
 
-# Phase 1 — Thin end-to-end slice
+# Phase 1 — MVP
 
 ## 1. Empty project with a passing test
 
@@ -109,6 +131,19 @@ the household can create one, so do not gate creation on a role.
 
 ---
 
+## 35. Preloaded chore library
+
+**Goal:** A fresh install has a set of realistic chores to start from.
+
+**Description:** Add a management command that loads a library of common
+household chores into a household — dishes, bins, bathroom, vacuuming, laundry,
+changing sheets and similar — each with a sensible recurrence, estimated
+duration and difficulty. This makes a new install immediately usable and gives
+the calendar something to show without anyone typing fifteen chores in by hand.
+Loading twice must not duplicate anything.
+
+---
+
 ## 4. Chore occurrence with frozen effort values
 
 **Goal:** Each due instance of a chore is a separate record that keeps its own
@@ -128,10 +163,9 @@ keeps the values it was scored under.
 rather than a state.
 
 **Description:** Add guarded transitions to `ChoreOccurrence` covering pending
-→ logged → approved or rejected, with rejection returning it to pending. Model
-overdue as a separate nullable timestamp alongside the state, because an
-overdue chore is still assigned and still owed. Illegal transitions should
-raise rather than silently no-op.
+→ done. Model overdue as a separate nullable timestamp alongside the state,
+because an overdue chore is still assigned and still owed. Illegal transitions
+should raise rather than silently no-op. The approval states are deferred.
 
 ---
 
@@ -186,15 +220,15 @@ worth more care than the ones that follow.
 
 ---
 
-## 10. Logging a completion with a photo
+## 10. Marking a chore done, with an optional photo
 
-**Goal:** An assignee can mark a chore done by uploading a photo.
+**Goal:** An assignee can mark a chore done, attaching a photo if they want to.
 
-**Description:** Add a `CompletionLog` attached to an occurrence with a
-required image field, plus the form and view that create it and move the
-occurrence into its logged state. The photo is required at the model level, not
-merely on the form, because it is the entire verification mechanism. Choosing
-an approver comes with the approval loop.
+**Description:** Add a `CompletionLog` attached to an occurrence with an
+optional image field, plus the form and view that create it and move the
+occurrence into its done state. The photo is optional rather than required: a
+one-person household has nobody to show it to, and approval is deferred. Keep
+the field so evidence is possible for households that want it.
 
 ---
 
@@ -237,7 +271,7 @@ overrides and other purpose-built actions are separate tasks.
 
 ---
 
-# Phase 2 — Verification loop
+# Phase 2 — History and notifications
 
 ## 14. Append-only feed model
 
@@ -247,55 +281,8 @@ overrides and other purpose-built actions are separate tasks.
 occurrence, a JSON payload, and a creation timestamp. Nothing may update or
 delete an entry — corrections are new entries. Enforce this with a database
 trigger that aborts updates and deletes, which both SQLite and Postgres
-support, rather than relying on application discipline.
-
----
-
-## 15. Choosing an approver and approving
-
-**Goal:** A completed chore is confirmed by someone the assignee picked.
-
-**Description:** Extend the completion form to require choosing an approver
-from the household, and add an approve action available to that person. On
-approval the occurrence becomes approved and a `FeedEntry` records who approved
-and when. The plan rules out restricting who may be chosen, so add no filtering
-beyond excluding the assignee.
-
----
-
-## 16. Rejecting a completion
-
-**Goal:** An approver can reject work, with a written reason, without erasing
-the attempt.
-
-**Description:** Add a reject action requiring a non-empty written reason. The
-rejected `CompletionLog` is kept rather than deleted, and the occurrence
-returns to the same assignee to redo — responsibility must not move silently.
-Write a `FeedEntry` capturing the rejection and its reason.
-
----
-
-## 17. Rejection limit
-
-**Goal:** A chore stops looping after it has been rejected twice.
-
-**Description:** Count rejections per `ChoreOccurrence` and, once there are
-two, block any further rejection and mark the occurrence as needing admin
-resolution. The redo loop must not continue past this point. Surfacing these
-occurrences is the next task; this one only enforces the limit and sets the
-flag.
-
----
-
-## 18. Admin resolution of stuck chores
-
-**Goal:** An admin can clear a chore that has hit the rejection limit.
-
-**Description:** Add a view listing occurrences flagged as needing admin
-resolution, and an action letting an admin resolve one. The plan says only that
-the admin decides, so allow both approving and cancelling, and record either
-outcome as a `FeedEntry` naming the admin who acted. Without this, a flagged
-chore has no way out.
+support. In the MVP the verbs are completions, effort overrides and
+reassignments.
 
 ---
 
@@ -304,10 +291,9 @@ chore has no way out.
 **Goal:** The household can see the history of what happened.
 
 **Description:** Add a chronological, household-scoped view of `FeedEntry` rows
-showing who acted, what they did, and when. This is what makes approval
-patterns visible, which the plan relies on as its mitigation for approvers
-rubber-stamping. Include approvals, rejections, effort overrides, and
-reassignments in the same stream.
+showing who acted, what they did, and when. Include completions, effort
+overrides and reassignments in the same stream. This is the append-only history
+the plan requires: corrections add entries rather than replacing them.
 
 ---
 
@@ -326,15 +312,15 @@ The loop must never reassign the chore.
 
 ## 21. Score computation with monthly periods
 
-**Goal:** Each person has a score for the current month, reflecting approved
+**Goal:** Each person has a score for the current month, reflecting completed
 work.
 
 **Description:** Add the notion of a monthly scoring period, and compute a
 per-person score as the sum of estimated duration multiplied by difficulty
-across their approved occurrences within the current period. Read the effort
+across their completed occurrences within the current period. Read the effort
 values stored on the occurrence rather than on the definition — this is what
-stops a later edit from rewriting past scores. Make the period boundary
-testable with a controllable clock.
+stops a later edit from rewriting past scores, and why self-marking cannot
+inflate a score. Make the period boundary testable with a controllable clock.
 
 ---
 
@@ -448,14 +434,15 @@ nobody has opted in, fall back to deferring.
 
 ---
 
-## 31. Granting skills through approval
+## 31. Granting skills on completion of a stretch chore
 
-**Goal:** Completing a stretch chore successfully teaches the skill.
+**Goal:** Completing a stretch chore teaches the skill.
 
-**Description:** When a stretch occurrence is approved, add the required skill
-to the assignee's skill set and write a `FeedEntry` recording it. Approval is
-the only route — a rejected stretch attempt grants nothing. This closes the
-loop where the approval mechanism and the skill system feed each other.
+**Description:** When a stretch occurrence is marked done, add the required
+skill to the assignee's skill set and write a `FeedEntry` recording it. With
+the approval loop deferred, completion is the trigger; if approval is built
+later, this moves to approval instead, since that was the plan's original
+intent.
 
 ---
 
@@ -498,6 +485,59 @@ nothing.
 user can accept, edit, or ignore, with the admin able to override. Include a
 test that stubs the model call to fail and asserts a chore can still be created
 and used normally. That test is the acceptance criterion for this work.
+
+---
+
+# Deferred — Approval loop
+
+Dropped from the MVP because a one-person household has no reviewer. Kept here
+rather than closed: a multi-person household may still want this, and it is
+what plan.md considers the point of the tool. If it is built, the photo on
+task 10 should become required again and scoring should count approved rather
+than completed work.
+
+## 15. Choosing an approver and approving
+
+**Goal:** A completed chore is confirmed by someone the assignee picked.
+
+**Description:** Extend the completion form to require choosing an approver
+from the household, and add an approve action available to that person. On
+approval the occurrence becomes approved and a `FeedEntry` records who approved
+and when. The plan rules out restricting who may be chosen, so add no filtering
+beyond excluding the assignee.
+
+---
+
+## 16. Rejecting a completion
+
+**Goal:** An approver can reject work, with a written reason, without erasing
+the attempt.
+
+**Description:** Add a reject action requiring a non-empty written reason. The
+rejected `CompletionLog` is kept rather than deleted, and the occurrence
+returns to the same assignee to redo — responsibility must not move silently.
+Write a `FeedEntry` capturing the rejection and its reason.
+
+---
+
+## 17. Rejection limit
+
+**Goal:** A chore stops looping after it has been rejected twice.
+
+**Description:** Count rejections per `ChoreOccurrence` and, once there are
+two, block any further rejection and mark the occurrence as needing admin
+resolution. The redo loop must not continue past this point.
+
+---
+
+## 18. Admin resolution of stuck chores
+
+**Goal:** An admin can clear a chore that has hit the rejection limit.
+
+**Description:** Add a view listing occurrences flagged as needing admin
+resolution, and an action letting an admin resolve one. The plan says only that
+the admin decides, so allow both approving and cancelling, and record either
+outcome as a `FeedEntry` naming the admin who acted.
 
 ---
 
