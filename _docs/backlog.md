@@ -49,6 +49,7 @@ cannot inflate your score.
 - [ ] #9 Chore calendar and detail views
 - [ ] #10 Marking a chore done, with an optional photo
 - [ ] #11 Claiming an unassigned chore
+- [ ] #41 Reassigning an occurrence to another member
 - [ ] #12 Scheduler loop
 - [ ] #13 Django admin registration
 
@@ -268,6 +269,28 @@ any other assigned occurrence.
 
 ---
 
+## 41. Reassigning an occurrence to another member
+
+**Goal:** Any member can move a chore occurrence to a different member, so the
+schedule can be corrected by a person when the rotation's guess is wrong.
+
+**Description:** Round-robin assignment is a suggestion, not a verdict — it
+knows nothing about illness, travel, or who is cooking tonight. Add an action
+on the occurrence detail view letting any member set the assignee to any other
+member of the household, replacing the stored one-line reason with one naming
+who acted. Per-occurrence only: reassigning one week's chore must not rewrite
+who owns the definition. Not a swap — `plan.md` excludes negotiated two-way
+exchanges, and this is one person moving one chore.
+
+Surfaced while grooming #4: tasks 14 and 19 both list reassignment as an MVP
+feed verb, and plan.md's overdue rule requires a person to be able to act, but
+no task built the action.
+
+**Groomed** — see [issue #41](../../../issues/41) for acceptance criteria, out
+of scope, and constraints.
+
+---
+
 ## 12. Scheduler loop
 
 **Goal:** The backend keeps the calendar current on its own, without anyone
@@ -302,7 +325,8 @@ overrides and other purpose-built actions are separate tasks.
 **Goal:** There is a record of who did what, that cannot be rewritten.
 
 **Description:** Add a `FeedEntry` with an actor, a verb, a link to the
-occurrence, a JSON payload, and a creation timestamp. Nothing may update or
+occurrence, a JSON payload, and a creation timestamp. The reassignment verb
+is produced by #41. Nothing may update or
 delete an entry — corrections are new entries. Enforce this with a database
 trigger that aborts updates and deletes, which both SQLite and Postgres
 support. In the MVP the verbs are completions, effort overrides and
