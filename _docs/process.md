@@ -6,5 +6,5 @@
 # Roles
 
 - PM - grooms a task before anyone implements it, follows _docs/team/pm.md
-
-Every task is groomed by the PM before implementation starts. Take the role that fits the stage the task is at and follow that role's document.
+- Engineer - implements one groomed task, follows _docs/team/software-engineer.md
+- QA - checks the result against the acceptance criteria, follows _docs/team/qa-engineer.md
