@@ -1,7 +1,7 @@
 # Shared Household Chores Tool
 
-Django app for tracking household chores with photo-verified completion and
-peer approval. Scope is in `_docs/plan.md`; the ordered task list is in
+Django app for tracking household chores with photo-verified completion (OPTIONAL - post MVP) and
+peer approval (optional if only 1 person). Scope is in `_docs/plan.md`; the ordered task list is in
 `_docs/backlog.md`. Read the plan before adding features — several apparent
 gaps are deliberate exclusions, listed at the end of both documents.
 
@@ -58,8 +58,14 @@ generated `SECRET_KEY`; never commit it.
   `uv run ruff format .`. Migrations are excluded from both.
 - Tests use `--reuse-db`. Pass `--create-db` after a schema change if a test
   database looks stale.
-- Frontend is Django templates with HTMX and Alpine from a CDN. There is no
-  frontend build step, and adding one is a decision worth raising first.
+- Frontend is Django templates with HTMX from a CDN. There is no frontend build
+  step, and adding one is a decision worth raising first.
+- Alpine was in the stack and has been dropped. Every interaction here — claim,
+  mark done, reassign, submit a form — is a change the server has to know
+  about, which is what HTMX does; Alpine only covers browser-local state, and
+  layering the two loses that state whenever HTMX swaps the element holding it.
+  If a screen ever genuinely needs local interactivity, add it back for that
+  screen.
 - Time-dependent logic must accept an injected clock rather than reading the
   current time directly, so scheduling and monthly resets stay testable.
 

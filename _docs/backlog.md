@@ -252,8 +252,8 @@ base template, task 9 is the screen that carries the demo, and 10, 11, 19, 22
 and 29 all add screens on top — each of which will otherwise invent its own
 spacing, colour and component conventions. Write it before task 8: the type
 scale, the colour tokens, how an overdue marker looks, how a destructive action
-looks, and the handful of components the later screens compose from. HTMX and
-Alpine from a CDN with no build step is fixed, so it has to work in plain CSS.
+looks, and the handful of components the later screens compose from. HTMX from
+a CDN with no build step is fixed, so it has to work in plain CSS.
 
 Surfaced while grooming tasks 8 and 9.
 
@@ -269,9 +269,12 @@ in.
 
 **Description:** Add a base template with navigation and message display, and
 the login, logout, and signup templates that django-allauth expects. Load HTMX
-and Alpine from a CDN here so no later task needs to decide that. This is its
-own task because it is invisible groundwork that would otherwise be smuggled
-into the first screen someone builds.
+from a CDN here so no later task needs to decide that. This is its own task
+because it is invisible groundwork that would otherwise be smuggled into the
+first screen someone builds.
+
+Alpine was originally loaded here too and has been dropped — every interaction
+in this app is a server round-trip, which is HTMX's job. See AGENTS.md.
 
 **Groomed** — see [issue #8](../../../issues/8) for acceptance criteria, out
 of scope, and constraints.
