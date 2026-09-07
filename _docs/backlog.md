@@ -53,7 +53,7 @@ cannot inflate your score.
 - [ ] #41 Reassigning an occurrence to another member
 - [ ] #42 Adding and editing a chore definition in the app
 - [ ] #12 Scheduler loop
-- [ ] #13 Django admin registration
+- [x] #13 Django admin registration
 
 **Phase 2 — History and notifications**
 
