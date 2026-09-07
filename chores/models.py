@@ -29,6 +29,17 @@ def default_timezone() -> str:
     return settings.TIME_ZONE
 
 
+def validate_not_blank(value: str) -> None:
+    """Reject a value that is empty once stripped.
+
+    A field validator rather than model `clean()`, because `full_clean()` runs
+    `clean_fields()` first -- stripping in `clean()` happens after the blank
+    check has already passed a name of spaces.
+    """
+    if not (value or "").strip():
+        raise ValidationError("This field cannot be blank.")
+
+
 def validate_timezone(value: str) -> None:
     """Reject a timezone name zoneinfo cannot resolve.
 
@@ -45,7 +56,7 @@ def validate_timezone(value: str) -> None:
 class Household(models.Model):
     """A group of people sharing a chore list."""
 
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, validators=[validate_not_blank])
     timezone = models.CharField(
         max_length=64,
         default=default_timezone,
@@ -64,6 +75,17 @@ class Household(models.Model):
     def __str__(self) -> str:
         return self.name
 
+    def save(self, *args, **kwargs):
+        # Strip before storing so a name of spaces becomes "" and is caught by
+        # household_name_not_blank. Django does not strip model CharFields, and
+        # a household called "   " renders as blank on every screen.
+        self.name = (self.name or "").strip()
+        return super().save(*args, **kwargs)
+
+    def clean(self) -> None:
+        self.name = (self.name or "").strip()
+        super().clean()
+
 
 class Membership(models.Model):
     """Joins a user to a household, carrying the roles they hold there.
@@ -75,7 +97,8 @@ class Membership(models.Model):
     """
 
     ADMIN = "admin"
-    ROLE_CHOICES = [(ADMIN, "Admin")]
+    USER = "user"
+    ROLE_CHOICES = [(ADMIN, "Admin"), (USER, "User")]
     VALID_ROLES = frozenset(value for value, _label in ROLE_CHOICES)
 
     user = models.ForeignKey(

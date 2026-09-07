@@ -54,6 +54,28 @@ def test_blank_household_name_is_also_rejected_by_the_database():
         Household.objects.create(name="")
 
 
+@pytest.mark.django_db
+@pytest.mark.parametrize("blank_name", ["   ", "\t", "\n", " \t "])
+def test_whitespace_only_household_name_fails_validation(blank_name):
+    """A household called "   " reads as blank on every screen it appears on."""
+    with pytest.raises(ValidationError) as exc:
+        Household(name=blank_name).full_clean()
+    assert "name" in exc.value.message_dict
+
+
+@pytest.mark.django_db
+def test_whitespace_only_household_name_is_rejected_by_the_database():
+    with pytest.raises(IntegrityError):
+        Household.objects.create(name="   ")
+
+
+@pytest.mark.django_db
+def test_surrounding_whitespace_is_stripped_from_a_household_name():
+    house = Household.objects.create(name="  Rose Cottage  ")
+    house.refresh_from_db()
+    assert house.name == "Rose Cottage"
+
+
 # Household has a timezone, defaulting to the project's TIME_ZONE
 
 
@@ -116,12 +138,32 @@ def test_membership_can_hold_the_admin_role(user, household):
 
 @pytest.mark.django_db
 def test_membership_can_hold_several_roles(user, household):
-    """Roles are a set, so a second role needs no schema change to store."""
+    """The criterion is none, one, or several -- this is the several case."""
+    membership = Membership(
+        user=user, household=household, roles=[Membership.ADMIN, Membership.USER]
+    )
+    membership.full_clean()
+    membership.save()
+    membership.refresh_from_db()
+    assert membership.roles == [Membership.ADMIN, Membership.USER]
+    assert membership.has_role(Membership.ADMIN)
+    assert membership.has_role(Membership.USER)
+
+
+@pytest.mark.django_db
+def test_duplicate_roles_are_collapsed(user, household):
+    """Roles are a set: storing the same role twice keeps one copy."""
     membership = Membership(user=user, household=household)
     membership.roles = [Membership.ADMIN, Membership.ADMIN]
     membership.save()
     membership.refresh_from_db()
-    assert membership.roles == [Membership.ADMIN], "duplicates are collapsed"
+    assert membership.roles == [Membership.ADMIN]
+
+
+@pytest.mark.django_db
+def test_holding_the_user_role_alone_does_not_make_someone_an_admin(user, household):
+    membership = Membership.objects.create(user=user, household=household, roles=[Membership.USER])
+    assert membership.is_admin is False
 
 
 @pytest.mark.django_db
