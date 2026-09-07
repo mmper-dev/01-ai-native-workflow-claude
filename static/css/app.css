@@ -44,16 +44,6 @@
   --border-width: 1px; --border-width-thick: 2px;
   --focus-ring-width: 3px; --focus-ring-offset: 2px;
   --touch-min: 2.75rem; /* 44px */     --layout-max-width: 34rem; /* 544px */
-
-  /* Added by #8, not in the design system -- see the note below.
-     Text links exist on these pages (the app name, "Log in", "Sign up",
-     "Forgot your password?") and the document names no link colour, while its
-     colour rule requires every painted colour to come from a token. These
-     reuse the accent already in the palette rather than introducing a hue:
-     #1d4ed8 is 6.70:1 on --color-surface-card and 6.10:1 on --color-bg-page,
-     #1e3a8a is 10.36:1 and 9.42:1, all clear of the 4.5:1 floor. Links are
-     underlined as well as coloured, so nothing is carried by colour alone. */
-  --color-action-link: #1d4ed8; --color-action-link-hover: #1e3a8a;
 }
 
 
@@ -83,13 +73,18 @@ body {
   outline-offset: var(--focus-ring-offset);
 }
 
+/* The design system names no link colour, so links take the accent already in
+   the palette rather than introducing a hue or a token: --color-action-primary
+   is 6.70:1 on --color-surface-card and 6.10:1 on --color-bg-page, its hover
+   10.36:1 and 9.42:1, all clear of the 4.5:1 floor. Links are underlined as
+   well as coloured, so nothing is carried by colour alone. */
 a {
-  color: var(--color-action-link);
+  color: var(--color-action-primary);
   text-decoration: underline;
 }
 
 a:hover {
-  color: var(--color-action-link-hover);
+  color: var(--color-action-primary-hover);
 }
 
 
