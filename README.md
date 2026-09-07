@@ -87,8 +87,15 @@ page. To look at the admin, create a superuser first:
 uv run python manage.py createsuperuser
 ```
 
-The admin is at http://127.0.0.1:8000/admin/. Only users are registered so
-far; the domain models arrive with issue #13.
+The admin is at http://127.0.0.1:8000/admin/. Users, households, memberships,
+chore definitions and chore occurrences are all registered there; memberships
+are also edited inline on the household screen. On an occurrence the effort
+values, the state and the overdue flag are read-only, because they are frozen
+when the occurrence is created and the lifecycle owns the rest.
+
+Until the app's own screens exist, the admin is the only way to create a
+household, so it is where you start: add two users, a household with both as
+members, a chore, and an occurrence of it.
 
 ## Tests and linting
 
