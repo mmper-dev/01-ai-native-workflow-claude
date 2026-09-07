@@ -45,7 +45,7 @@ cannot inflate your score.
 - [x] #5 Occurrence lifecycle and the overdue flag
 - [ ] #6 Generating occurrences from a definition
 - [ ] #7 Round-robin assignment with a reason
-- [ ] #44 Write the design system document
+- [x] #44 Write the design system document
 - [ ] #8 Base templates and authentication pages
 - [ ] #9 Chore calendar and detail views
 - [ ] #10 Marking a chore done, with an optional photo
