@@ -35,6 +35,39 @@ cannot inflate your score.
 
 ## Progress
 
+### Where we left off — 2026-09-07
+
+Working only `mvp`-labelled issues; `post-mvp` ones are deliberately untouched.
+
+**Next action:** re-run QA on #8. It is code complete — two QA rounds are done
+and the third failure was a criterion wording problem, not a defect. The PM has
+already ruled on it (the app name in the global bar is the one link that takes
+no link colour, which is what shipped), so no engineering work remains. QA
+confirms, then it closes.
+
+**Then:** #9, the chore list and detail views. It is groomed and unblocked, and
+it is the change that makes the app visible — today the home screen renders
+"Nothing is due right now" no matter what is in the database, because nothing
+draws a chore yet.
+
+**State of the app.** Models, admin and the auth shell are done. `uv run
+pytest` is at 352 passing. A person can sign up, log in, log out, and reach a
+styled but empty home screen; `/admin/` gives full CRUD over every model. No
+chore is rendered anywhere in the app's own UI, and no card action (done,
+claim, reassign) exists — those are #9, #10, #11 and #41.
+
+**Issues filed this session**, from things QA found while verifying:
+
+| Issue | Label | What it is |
+|---|---|---|
+| #47 | post-mvp | No database guard on `ChoreDefinition`'s choice fields |
+| #48 | post-mvp | Clearing an overdue flag set in error |
+| #49 | mvp | Register `CompletionLog` in the admin — needs #10 first |
+| #50 | post-mvp | Dark mode theme |
+| #52 | post-mvp | Style the remaining allauth pages |
+| #53 | post-mvp | Give the design system a link section |
+| #54 | mvp, bug | allauth's login message prints the generated username |
+
 **Phase 1 — MVP**
 
 - [x] #1 Empty project with a passing test
@@ -54,6 +87,8 @@ cannot inflate your score.
 - [ ] #42 Adding and editing a chore definition in the app
 - [ ] #12 Scheduler loop
 - [x] #13 Django admin registration
+- [ ] #54 allauth's login message prints the generated username
+- [ ] #49 Register CompletionLog in the Django admin — after #10
 
 **Phase 2 — History and notifications**
 
@@ -100,6 +135,11 @@ cannot inflate your score.
 - [ ] #43 Choosing which household you are acting in
 - [ ] #45 Restoring the full verification loop when approval lands
 - [ ] #46 Changing a chore's schedule after occurrences exist
+- [ ] #47 Database-level guard on ChoreDefinition's choice fields
+- [ ] #48 Clearing an overdue flag set in error
+- [ ] #50 Dark mode theme
+- [ ] #52 Style the remaining allauth pages against the design system
+- [ ] #53 Give the design system a link section
 
 **Deferred — Approval loop**
 
