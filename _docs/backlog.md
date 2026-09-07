@@ -42,7 +42,7 @@ cannot inflate your score.
 - [x] #3 Chore definition model
 - [x] #35 Preloaded chore library
 - [x] #4 Chore occurrence with frozen effort values
-- [ ] #5 Occurrence lifecycle and the overdue flag
+- [x] #5 Occurrence lifecycle and the overdue flag
 - [ ] #6 Generating occurrences from a definition
 - [ ] #7 Round-robin assignment with a reason
 - [ ] #44 Write the design system document
