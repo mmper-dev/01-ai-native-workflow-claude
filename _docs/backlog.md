@@ -99,6 +99,7 @@ cannot inflate your score.
 - [ ] #40 Re-freezing effort values on already-generated occurrences
 - [ ] #43 Choosing which household you are acting in
 - [ ] #45 Restoring the full verification loop when approval lands
+- [ ] #46 Changing a chore's schedule after occurrences exist
 
 **Deferred — Approval loop**
 
@@ -167,6 +168,9 @@ changing sheets and similar — each with a sensible recurrence, estimated
 duration and difficulty. This makes a new install immediately usable and gives
 the calendar something to show without anyone typing fifteen chores in by hand.
 Loading twice must not duplicate anything.
+
+**Groomed** — see [issue #35](../../../issues/35) for acceptance criteria, out
+of scope, and constraints.
 
 ---
 
@@ -252,6 +256,9 @@ looks, and the handful of components the later screens compose from. HTMX and
 Alpine from a CDN with no build step is fixed, so it has to work in plain CSS.
 
 Surfaced while grooming tasks 8 and 9.
+
+**Groomed** — see [issue #44](../../../issues/44) for acceptance criteria, out
+of scope, and constraints.
 
 ---
 
@@ -353,6 +360,9 @@ reachable from the calendar. Editing affects future occurrences only; task 40
 decides whether already-generated pending occurrences are re-frozen.
 
 Surfaced while grooming tasks 5 to 15.
+
+**Groomed** — see [issue #42](../../../issues/42) for acceptance criteria, out
+of scope, and constraints.
 
 ---
 
@@ -692,6 +702,27 @@ active household: a switcher in the base template and something persisted per
 session, so the calendar, the scoreboard and the feed all agree.
 
 Surfaced while grooming task 9.
+
+---
+
+## 46. Changing a chore's schedule after occurrences exist
+
+**Goal:** A household can change how often a chore recurs, or when it starts,
+after occurrences have already been generated from it.
+
+**Description:** Task 6 anchors the recurrence grid on the start date and only
+ever adds occurrences. Editing the start date or the interval afterwards moves
+the grid out from under everything already generated: the old rows stay put,
+the generator starts filling the new positions, and the calendar shows two
+schedules at once. Task 42 therefore locks both fields once any occurrence
+exists — safe, but it leaves "make this every two days instead of daily" with
+no answer at all. Decide the rule and build it, most likely re-anchoring from a
+chosen date forward and clearing pending future occurrences that no longer sit
+on the grid. That means deleting generated occurrences, which task 6
+deliberately never does, so it has to say what happens to one someone has
+already been assigned. Task 40 asks the same question about effort values.
+
+Surfaced while grooming task 42.
 
 ---
 
