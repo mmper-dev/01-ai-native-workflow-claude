@@ -93,6 +93,7 @@ cannot inflate your score.
 - [ ] #37 Every household keeps at least one admin
 - [ ] #38 Pausing a chore definition
 - [ ] #39 Richer recurrence rules
+- [ ] #40 Re-freezing effort values on already-generated occurrences
 
 **Deferred — Approval loop**
 
@@ -174,6 +175,9 @@ its own due date, assignee, and state, plus copies of the estimated duration
 and difficulty taken at creation time. The copies are the point of this task:
 editing a definition must affect future occurrences only, so completed work
 keeps the values it was scored under.
+
+**Groomed** — see [issue #4](../../../issues/4) for acceptance criteria, out of
+scope, and constraints.
 
 ---
 
@@ -558,6 +562,21 @@ cannot express "weekdays only", "every second Tuesday" or "the first of the
 month". Add richer rules, most likely via `dateutil` rrule stored on the
 definition. Deliberately deferred: a day interval covers most household chores
 and needs no dependency.
+
+---
+
+## 40. Re-freezing effort values on already-generated occurrences
+
+**Goal:** Editing a chore definition updates the occurrences that have been
+generated ahead but not yet done.
+
+**Description:** Task 4 freezes effort values at creation time, so an edit
+today does not reach occurrences the generator already created for next week,
+even though nobody has done them yet. That is the reading that cannot rewrite a
+completed score, but it is not obviously what a household expects. Decide the
+intended rule — most likely re-copying onto pending future occurrences and
+leaving anything done or overdue alone — and write a `FeedEntry` per row
+changed, since this moves scores the way task 23 does.
 
 ---
 
