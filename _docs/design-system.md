@@ -74,13 +74,17 @@ block of values instead of rewriting rules.
   --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
   --space-5: 1.5rem;  --space-6: 2rem;   --space-7: 3rem;
   --radius-sm: 4px; --radius-md: 8px; --radius-pill: 999px;
-  --border-width: 1px; --border-width-thick: 2px; --focus-ring-width: 3px;
+  --border-width: 1px; --border-width-thick: 2px;
+  --focus-ring-width: 3px; --focus-ring-offset: 2px;
   --touch-min: 2.75rem; /* 44px */     --layout-max-width: 34rem; /* 544px */
 }
 ```
 
-**No rule anywhere uses a spacing, size or radius from outside these scales.** If a layout
-seems to need 18px, it needs 16px or 24px. Body text is **16px**, and so is every `input`,
+**Every spacing, radius, border width, focus offset and colour any rule paints comes from a
+token above** — no raw hex anywhere else in `app.css`, and if a layout seems to need 18px, it
+needs 16px or 24px. Two numbers sit outside that rule on purpose: the 480px padding breakpoint,
+a media query condition rather than a painted value, and viewport arithmetic quoted in prose to
+show something fits. Body text is **16px**, and so is every `input`,
 `select` and `textarea` — below 16px mobile Safari zooms the page when a field takes focus and
 does not zoom back. Two weights, 400 and 600. No web font: there is no build step and no
 self-hosting story, so the system stack is the font.
@@ -92,6 +96,12 @@ chore list, and account identity on the right: the signed-in account's email (or
 set) plus a **Log out** control, or a **Log in** link when anonymous. Nothing
 household-specific belongs in it — no household name, no switcher (#43). Keeping household
 logic out of the base template is #8's constraint and this document does not break it.
+The bar itself: `background: var(--color-surface-card)`, a `var(--border-width)` bottom border
+in `--color-border`, `padding: var(--space-2) var(--space-4)`, contents in the same content
+column as the page, height set by its contents. It is **not sticky** — it scrolls away, because
+nothing in it is needed mid-list and 360px has no vertical space to spare. **Log out is a POST
+form** rendered as a quiet button, not a link — allauth requires POST. **Log in** is a plain
+text link at `--text-sm`.
 
 **The page header block is rendered by the screen, not the shell**: household name at
 `--text-xl`/600, today's date under it at `--text-sm` secondary ("Sunday 7 September"), in the
@@ -117,10 +127,11 @@ and it's overdue.` `{when}` is `today at 6:00 pm`, `tomorrow at 9:00 am` or `on 
 Seven cells, `display: flex; gap: var(--space-1)`, each `flex: 1 1 0; min-width: 0`. At 360px
 that is 328px of content and 24px of gaps, 43px a cell: it fits with no wrap and no sideways
 scroll. A cell holds the weekday abbreviation (`Mon`) at `--text-xs` secondary, the day number
-at `--text-base`/600, and a **6px dot** in `--color-action-primary` when that day has at least
-one chore. A day with no chores renders **an empty 6px slot** in place of the dot, so no cell
-changes height. Today's cell has `background: var(--color-text-primary)`,
-`--color-text-on-dark` text and `border-radius: var(--radius-md)`. The strip is **display only
+at `--text-base`/600, and a **`var(--space-2)` dot** (8px square, `--radius-pill`) in
+`--color-action-primary` when that day has at least one chore. A day with no chores renders **an
+empty `var(--space-2)` slot** in place of the dot, so no cell changes height. Today's cell has
+`background: var(--color-text-primary)`, `--color-text-on-dark` text and `border-radius:
+var(--radius-md)`. The strip is **display only
 in the MVP** — no cell is tappable, so the 44px rule does not apply; an issue that makes days
 tappable must reach 44px tall first. Each cell carries an `aria-label` ("Friday 12 September,
 3 chores" / "…, no chores"), because a dot is a shape, not a word.
@@ -177,9 +188,15 @@ still owed by the same person.
 
 ## The done card
 
-`.card--done`: `background: var(--color-surface-muted)`, all text `--color-text-muted`, the
-chore name `text-decoration: line-through`, a green `Done` pill, and a completion line
-replacing the effort line — `Done by Alex on Fri 12 Sep at 7:14 pm`. **No action button.**
+`.card--done`: `background: var(--color-surface-muted)`; **every line of the text column —
+chore name included — drops to `--color-text-secondary`**, which is what greys the card; the
+chore name takes `text-decoration: line-through`; and a completion line replaces the effort line
+— `Done by Alex on Fri 12 Sep at 7:14 pm`. **No action button.**
+
+**The `Done` pill is the one exception**, keeping its own three tokens: it is the card's state
+carrier, and greying it would weaken the thing that has to survive a greyscale screenshot.
+Secondary rather than muted because muted text on the muted surface is 4.40:1 — see
+Accessibility.
 
 The rule this expresses: **an action taken on a card never removes that card.** Marking done
 swaps the card into this form, in place, keeping its position; the feed is append-only and the
@@ -195,7 +212,7 @@ var(--space-3) var(--space-4)`, `min-height` and `min-width` of `var(--touch-min
 | Variant | Background | Text | Border | Hover background |
 |---|---|---|---|---|
 | primary | `--color-action-primary` | `--color-text-on-dark` | transparent | `--color-action-primary-hover` |
-| quiet | `--color-surface-card` | `--color-text-primary` | 1px `--color-border-strong` | `--color-bg-page` |
+| quiet | `--color-surface-card` | `--color-text-primary` | `var(--border-width)` `--color-border-strong` | `--color-bg-page` |
 | destructive | `--color-action-danger` | `--color-text-on-dark` | transparent | `--color-action-danger-hover` |
 
 - **focus:** the shared focus ring below. Never removed, on any variant.
@@ -222,15 +239,18 @@ For #8's login, signup and logout pages, and every form after them.
   var(--color-state-overdue-border)` and a message line sits under the field in `--text-sm`
   `--color-action-danger`. The field gets `aria-invalid="true"` and `aria-describedby`
   pointing at that line — the red border alone is not the carrier.
-- **Form-level error block:** above the first field. Overdue surface, 1px overdue border,
-  `--radius-md`, `padding: var(--space-3) var(--space-4)`, overdue text, opening line
+- **Form-level error block:** above the first field. Overdue surface, `var(--border-width)`
+  overdue border, `--radius-md`, `padding: var(--space-3) var(--space-4)`, overdue text,
+  opening line
   `Something needs fixing.` then the errors as a list.
 
 **Django messages** render in `base.html`, in the content column, below the global bar and
 above the page header — the first thing under the chrome, so they are seen. Same block shape
 as the form-level error, one per message, starting with the word `Success`, `Error` or `Note`
-in 600 so the level is never colour alone: success uses the done tokens with text `#14532d`,
-error the overdue tokens, info the unclaimed tokens with text `#1e3a8a`.
+in 600 so the level is never colour alone. Each level takes a state's three tokens whole —
+success the done set, error the overdue set, info the unclaimed set — surface, border and text.
+No level introduces a colour of its own; there is no message-only value to define here, and #50
+retints all three by rewriting the state tokens.
 
 ## Empty states, the detail page, the scoreboard
 
@@ -291,9 +311,12 @@ for it with `hx-on::after-request="document.getElementById('occurrence-42')?.foc
 
 ## Accessibility
 
-Floors: **4.5:1** for body text, **3:1** for large text (18px/600 and up) and for meaningful
-non-text — pill borders, focus rings, button and field edges. To check a pair, paste the two
-hex values into the WebAIM contrast checker, or select the element in Chrome DevTools and read
+Floors: **4.5:1** for body text, **3:1** for large text and for meaningful non-text — pill
+borders, focus rings, button and field edges. WCAG's large-text threshold is **18.66px at 600+
+or 24px at any weight**, so only `--text-xl` qualifies; `--text-lg` at 18px/600 is a hair under
+it and is held to 4.5:1 like body text. Nothing here relies on the relaxation — the chore name
+runs at 17.7:1. To check a pair, paste the two hex values into the WebAIM contrast checker, or
+select the element in Chrome DevTools and read
 the ratio in the Accessibility pane. For the colour-alone check: DevTools → Rendering → Emulate
 vision deficiencies → Achromatopsia, then confirm every state still reads as a word.
 
@@ -303,17 +326,21 @@ Pairs measured against the tokens above:
 |---|---|---|
 | primary / secondary / muted text on card surface | 17.7 / 7.7 / 4.8 | 4.5 |
 | secondary text on page background | 7.0 | 4.5 |
-| pill text on its own surface — overdue / done / unclaimed | 6.8 / 6.5 / 7.2 | 4.5 |
+| **done-card text on the muted done surface** — name, meta and completion line | **7.0** | 4.5 |
+| pill and message text on its own surface — overdue/error, done/success, unclaimed/info | 6.8 / 6.5 / 7.2 | 4.5 |
 | pill border on card surface — overdue / done / unclaimed | 4.8 / 5.0 / 5.2 | 3 |
+| done pill border on the muted done surface | 4.6 | 3 |
 | button text on primary / destructive button | 6.7 / 6.5 | 4.5 |
 | field and quiet-button edge on card surface | 4.8 | 3 |
 | focus ring on card surface / page background | 6.7 / 6.1 | 3 |
-| success / info message text on their surfaces | 8.3 / 8.5 | 4.5 |
 | disabled button text on disabled background | 3.8 | exempt |
 
-`--color-border` (#d4d4d8, 1.5:1 on card surface) is a decorative hairline carrying no meaning —
-the card is also separated by its surface and its spacing. Anything identifying a control or a
-state uses `--color-border-strong` or a state border, all of which clear 3:1.
+Two pairs are called out rather than quietly passed. `--color-border` (#d4d4d8, 1.5:1 on card
+surface) is a decorative hairline carrying no meaning — the card is also separated by its
+surface and its spacing. Anything identifying a control or a state uses `--color-border-strong`
+or a state border, all of which clear 3:1. And `--color-text-muted` on `--color-surface-muted`
+is **4.40:1**, below the floor: that combination is **rejected**, which is why the done card
+uses secondary text. Muted text is legal on the white card surface (4.8:1) and nowhere else.
 
 **Focus ring**, on everything focusable, no exceptions. `outline: none` without a replacement of
 at least equal visibility is not allowed anywhere in this project.
@@ -321,7 +348,7 @@ at least equal visibility is not allowed anywhere in this project.
 ```css
 :focus-visible {
   outline: var(--focus-ring-width) solid var(--color-focus-ring);
-  outline-offset: 2px;
+  outline-offset: var(--focus-ring-offset);
 }
 ```
 
