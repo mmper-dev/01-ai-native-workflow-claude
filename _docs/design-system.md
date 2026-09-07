@@ -200,9 +200,13 @@ Accessibility.
 
 The rule this expresses: **an action taken on a card never removes that card.** Marking done
 swaps the card into this form, in place, keeping its position; the feed is append-only and the
-screen behaves the same way. #9's list is "what is still owed" and filters done occurrences
-out of it; where a just-completed card then lives is a genuine conflict between the two and
-**#51 settles it**. The shape is decided here either way.
+screen behaves the same way. Where a just-completed card then lives was a genuine conflict with
+#9's "what is still owed", and **#51 settled it in favour of this rule**: #9's list is bounded
+to a seven-day window and ordered by due time alone, so a chore done inside that window keeps
+its place in the list as a done card, and only done work older than the window drops out — to
+the feed (#19). The completion line itself needs a record of who finished the chore and when,
+which arrives with #10's `CompletionLog`; until then a done card omits that line and keeps its
+effort line, per the absent-field rule above.
 
 ## Buttons
 
