@@ -45,11 +45,13 @@ cannot inflate your score.
 - [ ] #5 Occurrence lifecycle and the overdue flag
 - [ ] #6 Generating occurrences from a definition
 - [ ] #7 Round-robin assignment with a reason
+- [ ] #44 Write the design system document
 - [ ] #8 Base templates and authentication pages
 - [ ] #9 Chore calendar and detail views
 - [ ] #10 Marking a chore done, with an optional photo
 - [ ] #11 Claiming an unassigned chore
 - [ ] #41 Reassigning an occurrence to another member
+- [ ] #42 Adding and editing a chore definition in the app
 - [ ] #12 Scheduler loop
 - [ ] #13 Django admin registration
 
@@ -95,6 +97,8 @@ cannot inflate your score.
 - [ ] #38 Pausing a chore definition
 - [ ] #39 Richer recurrence rules
 - [ ] #40 Re-freezing effort values on already-generated occurrences
+- [ ] #43 Choosing which household you are acting in
+- [ ] #45 Restoring the full verification loop when approval lands
 
 **Deferred — Approval loop**
 
@@ -192,6 +196,9 @@ rather than a state.
 because an overdue chore is still assigned and still owed. Illegal transitions
 should raise rather than silently no-op. The approval states are deferred.
 
+**Groomed** — see [issue #5](../../../issues/5) for acceptance criteria, out
+of scope, and constraints.
+
 ---
 
 ## 6. Generating occurrences from a definition
@@ -204,6 +211,9 @@ horizon and creates any missing `ChoreOccurrence` rows up to that horizon. It
 must be idempotent, because a background loop will call it repeatedly. Expose
 it as a management command so it can be run by hand and tested in isolation.
 
+**Groomed** — see [issue #6](../../../issues/6) for acceptance criteria, out
+of scope, and constraints.
+
 ---
 
 ## 7. Round-robin assignment with a reason
@@ -212,11 +222,36 @@ it as a management command so it can be run by hand and tested in isolation.
 explanation.
 
 **Description:** Assign each new occurrence in rotate mode to the household
-member who least recently did one, and store a human-readable reason alongside
-the assignee. Skills and availability are not considered yet; a later task
-replaces this rule with real eligibility logic, and the stored reason is what
-makes that upgrade visible. Assign mode takes a fixed person and claim mode
-leaves the assignee empty.
+member who least recently *was assigned* one, and store a human-readable reason
+alongside the assignee. Skills and availability are not considered yet; a later
+task replaces this rule with real eligibility logic, and the stored reason is
+what makes that upgrade visible. Assign mode takes a fixed person and claim
+mode leaves the assignee empty.
+
+This originally read "least recently did one", which does not work: task 6
+fills a whole horizon in one pass, no completion happens between the first
+occurrence in the batch and the last, so that rule hands the entire fortnight
+to one person. Corrected while grooming.
+
+**Groomed** — see [issue #7](../../../issues/7) for acceptance criteria, out
+of scope, and constraints.
+
+---
+
+## 44. Write the design system document
+
+**Goal:** There is a written design system for the UI tasks to follow.
+
+**Description:** `AGENTS.md` says to read `_docs/design-system.md` before
+anything touching the UI, and the file does not exist. Task 8 lays down the
+base template, task 9 is the screen that carries the demo, and 10, 11, 19, 22
+and 29 all add screens on top — each of which will otherwise invent its own
+spacing, colour and component conventions. Write it before task 8: the type
+scale, the colour tokens, how an overdue marker looks, how a destructive action
+looks, and the handful of components the later screens compose from. HTMX and
+Alpine from a CDN with no build step is fixed, so it has to work in plain CSS.
+
+Surfaced while grooming tasks 8 and 9.
 
 ---
 
@@ -231,6 +266,9 @@ and Alpine from a CDN here so no later task needs to decide that. This is its
 own task because it is invisible groundwork that would otherwise be smuggled
 into the first screen someone builds.
 
+**Groomed** — see [issue #8](../../../issues/8) for acceptance criteria, out
+of scope, and constraints.
+
 ---
 
 ## 9. Chore calendar and detail views
@@ -242,6 +280,9 @@ the current user's household, showing the assignee, the due date, the stored
 assignment reason, and a clear marker for anything overdue. Add a detail view
 for a single occurrence. This is the screen that carries the demo, so it is
 worth more care than the ones that follow.
+
+**Groomed** — see [issue #9](../../../issues/9) for acceptance criteria, out
+of scope, and constraints.
 
 ---
 
@@ -255,6 +296,9 @@ occurrence into its done state. The photo is optional rather than required: a
 one-person household has nobody to show it to, and approval is deferred. Keep
 the field so evidence is possible for households that want it.
 
+**Groomed** — see [issue #10](../../../issues/10) for acceptance criteria, out
+of scope, and constraints.
+
 ---
 
 ## 11. Claiming an unassigned chore
@@ -266,6 +310,9 @@ occurrence that has no assignee, setting themselves as the assignee. This
 applies to chore definitions whose assignment mode is claim, which produce
 occurrences with the assignee left empty. Once claimed, the chore behaves like
 any other assigned occurrence.
+
+**Groomed** — see [issue #11](../../../issues/11) for acceptance criteria, out
+of scope, and constraints.
 
 ---
 
@@ -291,6 +338,24 @@ of scope, and constraints.
 
 ---
 
+## 42. Adding and editing a chore definition in the app
+
+**Goal:** A member can add and edit a chore for their household without needing
+a Django admin login.
+
+**Description:** `plan.md` says anyone can add a chore to the shared list, and
+task 3's acceptance criteria state that creation is not gated on a role — but
+no task built a form for it. Task 13 registers the models in Django admin and
+scopes itself to households and members, and the admin needs `is_staff`
+anyway, so as the backlog stood an ordinary member could not add a chore at
+all. Add a create and edit form scoped to the current user's household,
+reachable from the calendar. Editing affects future occurrences only; task 40
+decides whether already-generated pending occurrences are re-frozen.
+
+Surfaced while grooming tasks 5 to 15.
+
+---
+
 ## 12. Scheduler loop
 
 **Goal:** The backend keeps the calendar current on its own, without anyone
@@ -302,6 +367,9 @@ as a separate process from the web server so it is never duplicated across web
 workers, and make the interval and a single-pass mode configurable so it can be
 tested without waiting. Log each pass, because a loop that dies silently is the
 main failure mode.
+
+**Groomed** — see [issue #12](../../../issues/12) for acceptance criteria, out
+of scope, and constraints.
 
 ---
 
@@ -315,6 +383,9 @@ occurrences, and completion logs with sensible list displays and filters. This
 is deliberately the only way to create a household or add a member, which is
 why it is worth doing properly rather than accepting the defaults. Effort
 overrides and other purpose-built actions are separate tasks.
+
+**Groomed** — see [issue #13](../../../issues/13) for acceptance criteria, out
+of scope, and constraints.
 
 ---
 
@@ -331,6 +402,9 @@ delete an entry — corrections are new entries. Enforce this with a database
 trigger that aborts updates and deletes, which both SQLite and Postgres
 support. In the MVP the verbs are completions, effort overrides and
 reassignments.
+
+**Groomed** — see [issue #14](../../../issues/14) for acceptance criteria, out
+of scope, and constraints.
 
 ---
 
@@ -604,13 +678,51 @@ changed, since this moves scores the way task 23 does.
 
 ---
 
+## 43. Choosing which household you are acting in
+
+**Goal:** A member can act in one household at a time, and every screen knows
+which one.
+
+**Description:** Task 2 allows the same user to hold memberships in two
+households, and every view from task 9 onward is household-scoped — but nothing
+says which household a two-membership user is looking at. The MVP tasks resolve
+this by taking the member's single membership and failing loudly if there is
+more than one, which is correct and small but not an answer. Add an explicit
+active household: a switcher in the base template and something persisted per
+session, so the calendar, the scoreboard and the feed all agree.
+
+Surfaced while grooming task 9.
+
+---
+
+## 45. Restoring the full verification loop when approval lands
+
+**Goal:** When the approval loop is built, the two MVP trade-offs it forced are
+reversed.
+
+**Description:** `plan.md` and this document both record that the MVP deviates
+in two places *because* approval is deferred: the completion photo is optional
+rather than required, and scoring counts completed rather than approved work.
+`AGENTS.md` still states the intended end state — the photo is required at the
+model level — so the code and that rule disagree for as long as the MVP stands.
+If tasks 15 to 18 are built, reverse both: make the photo required on
+`CompletionLog`, and change task 21 to sum approved rather than completed
+occurrences. Neither is inside the scope of any approval task, so both would
+otherwise be left undone.
+
+Filed as the single link target for that reversal, referenced from tasks 10,
+15 and 21.
+
+---
+
 # Deferred — Approval loop
 
 Dropped from the MVP because a one-person household has no reviewer. Kept here
 rather than closed: a multi-person household may still want this, and it is
 what plan.md considers the point of the tool. If it is built, the photo on
 task 10 should become required again and scoring should count approved rather
-than completed work.
+than completed work. That reversal is task 45, so it has somewhere to live
+rather than being assumed.
 
 ## 15. Choosing an approver and approving
 
@@ -621,6 +733,9 @@ from the household, and add an approve action available to that person. On
 approval the occurrence becomes approved and a `FeedEntry` records who approved
 and when. The plan rules out restricting who may be chosen, so add no filtering
 beyond excluding the assignee.
+
+**Groomed** — see [issue #15](../../../issues/15) for acceptance criteria, out
+of scope, and constraints.
 
 ---
 
