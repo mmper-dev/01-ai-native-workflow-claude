@@ -40,7 +40,7 @@ cannot inflate your score.
 - [x] #1 Empty project with a passing test
 - [x] #2 Household and membership
 - [x] #3 Chore definition model
-- [ ] #35 Preloaded chore library
+- [x] #35 Preloaded chore library
 - [ ] #4 Chore occurrence with frozen effort values
 - [ ] #5 Occurrence lifecycle and the overdue flag
 - [ ] #6 Generating occurrences from a definition
