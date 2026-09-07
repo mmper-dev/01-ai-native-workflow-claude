@@ -91,6 +91,8 @@ cannot inflate your score.
 
 - [ ] #36 Removing a member without orphaning history
 - [ ] #37 Every household keeps at least one admin
+- [ ] #38 Pausing a chore definition
+- [ ] #39 Richer recurrence rules
 
 **Deferred — Approval loop**
 
@@ -134,13 +136,18 @@ scope, and constraints.
 
 ## 3. Chore definition model
 
-**Goal:** A household can describe a reusable piece of work.
+**Goal:** A household can describe a reusable piece of work, with enough detail
+for the scheduler to place it on a calendar and for scoring to value it.
 
 **Description:** Add a `ChoreDefinition` belonging to a household, with a name,
-an assignment mode (rotate, assign, or claim), a recurrence that is either a
-fixed interval or one-off, an estimated duration in minutes, and a difficulty
-weight. Skill requirements are a later task and should be left out. Anyone in
-the household can create one, so do not gate creation on a role.
+a start date, an assignment mode (rotate, assign, or claim), a recurrence that
+is either one-off or a fixed interval in days, an estimated duration in
+minutes, and a difficulty from 1 to 5. Assign mode names a fixed member; the
+other two do not. Skill requirements are a later task. Anyone in the household
+can create one, so do not gate creation on a role.
+
+**Groomed** — see [issue #3](../../../issues/3) for acceptance criteria, out of
+scope, and constraints.
 
 ---
 
@@ -527,6 +534,30 @@ household, which would leave effort overrides and other admin-only actions
 unreachable. Add a check that prevents removing the final admin, or a rule for
 who inherits it. Related to plan.md's open question about how the admin is
 chosen.
+
+---
+
+## 38. Pausing a chore definition
+
+**Goal:** A household can stop a chore recurring without deleting its history.
+
+**Description:** Seasonal chores — mowing the lawn, defrosting the freezer —
+should be pausable rather than deleted, because deleting a definition would take
+its past occurrences and the scores attached to them with it. Add an active flag
+that stops new occurrences being generated while leaving everything already
+generated alone.
+
+---
+
+## 39. Richer recurrence rules
+
+**Goal:** Chores can recur on patterns a fixed day interval cannot express.
+
+**Description:** The MVP models recurrence as a fixed interval in days, which
+cannot express "weekdays only", "every second Tuesday" or "the first of the
+month". Add richer rules, most likely via `dateutil` rrule stored on the
+definition. Deliberately deferred: a day interval covers most household chores
+and needs no dependency.
 
 ---
 
