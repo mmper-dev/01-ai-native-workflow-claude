@@ -1,3 +1,4 @@
+import datetime
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.conf import settings
@@ -5,6 +6,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils import timezone as django_timezone
 
 
 class User(AbstractUser):
@@ -338,6 +340,40 @@ class OccurrenceState(models.TextChoices):
     DONE = "done", "Done"
 
 
+class IllegalTransition(Exception):
+    """A move the occurrence lifecycle does not allow was attempted.
+
+    One exception with one name, defined beside the model so task 10, 12 and 13
+    import the model and the exception from the same place. It is deliberately
+    not a `ValidationError`: nothing here comes from a form, and a caller
+    catching it is handling a programming or concurrency error, not user input.
+    """
+
+
+# The whole state machine, held as data so adding a state later -- task 16
+# returns a rejected occurrence to pending, task 15 adds approved -- is a new
+# entry rather than a rewrite of the guard below.
+ALLOWED_TRANSITIONS: dict[str, frozenset[str]] = {
+    OccurrenceState.PENDING: frozenset({OccurrenceState.DONE}),
+}
+
+# A state with nowhere left to go is terminal, and a terminal occurrence is no
+# longer owed, so it cannot newly go late. Derived rather than listed, so the
+# mapping above stays the single place a state is declared.
+OPEN_STATES: frozenset[str] = frozenset(ALLOWED_TRANSITIONS)
+
+
+def _require_aware(value: datetime.datetime, *, argument: str) -> None:
+    """Reject a naive datetime, naming the argument it arrived in.
+
+    USE_TZ is on, so Django would store a naive value as though it were already
+    UTC. A clock injected from a caller running in the household's timezone
+    would then be silently shifted rather than converted.
+    """
+    if not isinstance(value, datetime.datetime) or django_timezone.is_naive(value):
+        raise ValueError(f"{argument} must be an aware datetime, got {value!r}.")
+
+
 class ChoreOccurrence(models.Model):
     """One dated instance of a chore definition, carrying its own effort values.
 
@@ -385,6 +421,19 @@ class ChoreOccurrence(models.Model):
         choices=OccurrenceState.choices,
         default=OccurrenceState.PENDING,
         help_text="Pending until it is done. Overdue is a separate flag, not a state.",
+    )
+    overdue_at = models.DateTimeField(
+        # No CheckConstraint pairs with this field, unlike every other rule on
+        # the model. `overdue_at` is legal against either state: a done
+        # occurrence keeps the record that it was late, and a pending one may
+        # or may not have gone late yet. There is no invariant to express.
+        null=True,
+        blank=True,
+        default=None,
+        help_text=(
+            "When the chore first went late, stored in UTC. Empty until it does. "
+            "Overdue is a flag, not a state: the occurrence stays pending and stays owed."
+        ),
     )
 
     class Meta:
@@ -446,6 +495,80 @@ class ChoreOccurrence(models.Model):
                 raise ValidationError(
                     {"assignee": "The assignee must belong to the chore's household."}
                 )
+
+    def _guard(self, *, to_state: str | None, what: str) -> None:
+        """Reject a move ALLOWED_TRANSITIONS does not permit. The one guard.
+
+        `to_state=None` means "no state change, only a flag": allowed from any
+        open state, rejected from a terminal one.
+        """
+        if self._state.adding:
+            # An unsaved instance has no row to move. Letting save() through
+            # here would insert one, and task 4 freezes effort values on
+            # insert, so the accident would silently stamp a score as well.
+            raise IllegalTransition(f"Cannot {what} an unsaved occurrence ({self}).")
+
+        reachable = ALLOWED_TRANSITIONS.get(self.state, frozenset())
+        if to_state is None:
+            if self.state not in OPEN_STATES:
+                raise IllegalTransition(
+                    f"Cannot {what} {self}: it is '{self.state}', which is terminal."
+                )
+        elif to_state not in reachable:
+            raise IllegalTransition(
+                f"Cannot {what} {self}: '{self.state}' does not move to '{to_state}'."
+            )
+
+    def mark_done(self, *, now: datetime.datetime) -> bool:
+        """Move a pending, assigned occurrence to done. Returns True.
+
+        Raises `IllegalTransition` if it is already done or has nobody to
+        credit, and `ValueError` if `now` is naive. `now` is required so the
+        clock stays injected, per AGENTS.md, even though nothing is stamped
+        with it: the completion time and its author are task 10's
+        `CompletionLog`, not columns here.
+
+        `overdue_at` is left exactly as it was -- clearing it would erase the
+        record that the chore was late. No transaction is opened: task 10 wraps
+        this and its `CompletionLog` in one and owns that boundary.
+        """
+        _require_aware(now, argument="now")
+        self._guard(to_state=OccurrenceState.DONE, what="complete")
+        if self.assignee_id is None:
+            raise IllegalTransition(
+                f"Cannot complete {self}: it has no assignee, so there is nobody to credit."
+            )
+
+        self.state = OccurrenceState.DONE
+        # Only the field this transition wrote. A plain save() would write back
+        # every field of a possibly stale instance -- task 12's loop holds an
+        # occurrence read at the top of a pass while a web request reassigns
+        # it, and a full save would silently revert that.
+        self.save(update_fields=["state"])
+        return True
+
+    def mark_overdue(self, *, now: datetime.datetime) -> bool:
+        """Flag a pending occurrence as late, at the `now` it was passed.
+
+        Returns True when the flag was set, and False when it was already set:
+        an idempotent no-op, because task 12's loop passes over the same rows
+        every interval and counts what actually changed, and because the
+        timestamp must keep the moment the chore *first* went late.
+
+        Raises `IllegalTransition` on a done occurrence, and `ValueError` if
+        `now` is naive. `state` and `assignee` are never touched -- overdue is
+        a flag, and moving responsibility takes a person acting (task 41).
+        `now` is not compared to `due_at`: deciding a chore has gone late is
+        task 12's job, and a `now` before `due_at` is stored as given.
+        """
+        _require_aware(now, argument="now")
+        self._guard(to_state=None, what="flag overdue")
+        if self.overdue_at is not None:
+            return False
+
+        self.overdue_at = now
+        self.save(update_fields=["overdue_at"])
+        return True
 
     def _freeze_effort_values(self) -> None:
         """Copy any effort value not supplied by the caller from the definition.

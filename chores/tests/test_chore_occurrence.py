@@ -380,11 +380,10 @@ def test_the_state_constraint_is_named_as_the_issue_says():
     assert "chore_occurrence_state_in_choices" in names
 
 
-@pytest.mark.django_db
-def test_no_transition_methods_are_added_here():
-    """The transitions are task 5; this task adds the field and its default."""
-    assert not hasattr(ChoreOccurrence, "mark_done")
-    assert not hasattr(ChoreOccurrence, "overdue_at")
+# Task 4 asserted here that `mark_done` and `overdue_at` did not exist yet --
+# a boundary between two tasks rather than a rule about the model. Task 5 has
+# landed and added both, so the assertion is gone and the behaviour is covered
+# by `test_occurrence_lifecycle.py`.
 
 
 # Integrity: PROTECT on both foreign keys
