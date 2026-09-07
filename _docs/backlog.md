@@ -38,7 +38,7 @@ cannot inflate your score.
 **Phase 1 — MVP**
 
 - [x] #1 Empty project with a passing test
-- [ ] #2 Household and membership
+- [x] #2 Household and membership
 - [ ] #3 Chore definition model
 - [ ] #35 Preloaded chore library
 - [ ] #4 Chore occurrence with frozen effort values
