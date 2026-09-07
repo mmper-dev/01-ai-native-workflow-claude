@@ -321,3 +321,143 @@ class ChoreDefinition(models.Model):
 
         if errors:
             raise ValidationError(errors)
+
+
+class OccurrenceState(models.TextChoices):
+    """Where a single due instance has got to. Task 5 owns the transitions.
+
+    Module level for the same reason AssignmentMode is: a model's Meta is its
+    own scope and cannot see names from the class body around it.
+
+    There is deliberately no `overdue` member. An overdue occurrence is still
+    pending and still owed by whoever holds it, so overdue is a flag -- task 5
+    adds it as a nullable `overdue_at` timestamp -- and not a third state.
+    """
+
+    PENDING = "pending", "Pending"
+    DONE = "done", "Done"
+
+
+class ChoreOccurrence(models.Model):
+    """One dated instance of a chore definition, carrying its own effort values.
+
+    The effort values are copied from the definition when the row is created
+    and never again, so editing a definition cannot rewrite what work already
+    generated -- or already completed -- was worth. Scoring reads these fields,
+    never the definition's.
+
+    The household is not repeated here: it is reached through the definition,
+    so the two can never disagree.
+    """
+
+    definition = models.ForeignKey(
+        ChoreDefinition,
+        on_delete=models.PROTECT,
+        related_name="occurrences",
+        help_text="The chore this is an instance of. The household comes from it.",
+    )
+    assignee = models.ForeignKey(
+        # A User rather than a Membership, matching ChoreDefinition.fixed_member:
+        # one way of naming a person, not two. Effort totals must therefore
+        # filter by household explicitly.
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="assigned_occurrences",
+        help_text="Who owes this. Empty until someone claims a 'claim' chore.",
+    )
+    due_at = models.DateTimeField(
+        # Stored in UTC. The household timezone is for computing this value
+        # from a definition's start_date and for displaying it, not for storage.
+        help_text="When the chore is due, stored in UTC.",
+    )
+    estimated_minutes = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)],
+        help_text="Rough duration in minutes, frozen from the definition. At least 1.",
+    )
+    difficulty = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(MIN_DIFFICULTY), MaxValueValidator(MAX_DIFFICULTY)],
+        help_text="How demanding the chore is, frozen from the definition, 1 (easy) to 5 (hard).",
+    )
+    state = models.CharField(
+        max_length=16,
+        choices=OccurrenceState.choices,
+        default=OccurrenceState.PENDING,
+        help_text="Pending until it is done. Overdue is a separate flag, not a state.",
+    )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(estimated_minutes__gt=0),
+                name="chore_occurrence_estimated_minutes_positive",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(difficulty__gte=MIN_DIFFICULTY, difficulty__lte=MAX_DIFFICULTY),
+                name="chore_occurrence_difficulty_in_range",
+            ),
+            models.CheckConstraint(
+                # Django enforces choices in full_clean() only, and the
+                # generator, the admin and the seed command all write on paths
+                # that need not call it.
+                condition=models.Q(state__in=OccurrenceState.values),
+                name="chore_occurrence_state_in_choices",
+            ),
+            models.UniqueConstraint(
+                # Task 6's generator is idempotent against exactly this pair.
+                fields=["definition", "due_at"],
+                name="unique_occurrence_per_definition_and_due_at",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.definition} due {self.due_at:%Y-%m-%d %H:%M}"
+
+    def save(self, *args, **kwargs):
+        # Freeze on creation only. `_state.adding` is the one check that is
+        # false for every re-save, including the ones task 5's transitions,
+        # task 7's assignment and task 10's completion make -- re-reading the
+        # definition there would rewrite a score that has already been counted.
+        if self._state.adding:
+            self._freeze_effort_values()
+        return super().save(*args, **kwargs)
+
+    def full_clean(self, *args, **kwargs):
+        # Freeze here rather than in clean(), because full_clean() runs
+        # clean_fields() first -- an unfrozen new occurrence would be reported
+        # as missing its effort values before clean() ever got to fill them in.
+        if self._state.adding:
+            self._freeze_effort_values()
+        return super().full_clean(*args, **kwargs)
+
+    def clean(self) -> None:
+        super().clean()
+
+        if self.assignee_id is not None and self.definition_id is not None:
+            # Spans two tables, so no CheckConstraint can express it. Checked
+            # when the occurrence is validated, not maintained forever -- task
+            # 36 covers an assignee who has since left the household.
+            in_household = Membership.objects.filter(
+                user_id=self.assignee_id,
+                household_id=self.definition.household_id,
+            ).exists()
+            if not in_household:
+                raise ValidationError(
+                    {"assignee": "The assignee must belong to the chore's household."}
+                )
+
+    def _freeze_effort_values(self) -> None:
+        """Copy any effort value not supplied by the caller from the definition.
+
+        Field by field, so passing one and omitting the other freezes only the
+        omitted one. An explicitly passed value is never overwritten.
+        """
+        if self.definition_id is None:
+            return
+        if self.estimated_minutes is None or self.difficulty is None:
+            definition = self.definition
+            if self.estimated_minutes is None:
+                self.estimated_minutes = definition.estimated_minutes
+            if self.difficulty is None:
+                self.difficulty = definition.difficulty
