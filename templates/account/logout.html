@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% comment %}
+  Extends the project shell directly -- see the note in account/login.html.
+  GET renders this confirmation; the logout itself happens only on POST,
+  because ACCOUNT_LOGOUT_ON_GET is off by default and stays off.
+{% endcomment %}
+
+{% block title %}Log out{% endblock %}
+
+{% block content %}
+  <h1 class="page-heading">Log out</h1>
+
+  <p class="auth-lead">Are you sure you want to log out?</p>
+
+  <form class="form" method="post" action="{% url 'account_logout' %}">
+    {% csrf_token %}
+    {{ redirect_field }}
+    <button type="submit" class="btn btn--primary">Log out</button>
+  </form>
+{% endblock %}

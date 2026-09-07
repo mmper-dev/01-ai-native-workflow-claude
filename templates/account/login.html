@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% comment %}
+  Extends the project shell directly. allauth's own entrance and manage layouts
+  chain up to a layout that emits a second doctype and a bare "Menu:" list, so
+  none of them is extended here; the fields are written out by hand rather than
+  through allauth's element tags, which carry allauth's own theme.
+{% endcomment %}
+
+{% block title %}Log in{% endblock %}
+
+{% block content %}
+  <h1 class="page-heading">Log in</h1>
+
+  <form class="form" method="post" action="{% url 'account_login' %}">
+    {% csrf_token %}
+    {{ redirect_field }}
+
+    {% if form.errors %}
+      <div class="notice notice--error" role="alert">
+        <p><span class="notice__lead">Something needs fixing.</span></p>
+        <ul>
+          {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+          {% for field in form %}
+            {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <div class="field">
+      <label class="field__label" for="{{ form.login.id_for_label }}">Email</label>
+      <input class="field__input"
+             type="email"
+             name="{{ form.login.html_name }}"
+             id="{{ form.login.id_for_label }}"
+             value="{{ form.login.value|default_if_none:'' }}"
+             autocomplete="email"
+             required
+             {% if form.login.errors %}aria-invalid="true" aria-describedby="{{ form.login.id_for_label }}-error"{% endif %}>
+      {% if form.login.errors %}
+        <p class="field__error" id="{{ form.login.id_for_label }}-error">{{ form.login.errors|join:" " }}</p>
+      {% endif %}
+    </div>
+
+    {% comment %}
+      No value on a password field: a redisplayed form keeps the email typed
+      into it and empties the password.
+    {% endcomment %}
+    <div class="field">
+      <label class="field__label" for="{{ form.password.id_for_label }}">Password</label>
+      <input class="field__input"
+             type="password"
+             name="{{ form.password.html_name }}"
+             id="{{ form.password.id_for_label }}"
+             autocomplete="current-password"
+             required
+             {% if form.password.errors %}aria-invalid="true" aria-describedby="{{ form.password.id_for_label }}-error"{% endif %}>
+      {% if form.password.errors %}
+        <p class="field__error" id="{{ form.password.id_for_label }}-error">{{ form.password.errors|join:" " }}</p>
+      {% endif %}
+      {% if form.password.help_text %}
+        <p class="field__help">{{ form.password.help_text|safe }}</p>
+      {% endif %}
+    </div>
+
+    {% comment %}
+      allauth adds this because ACCOUNT_SESSION_REMEMBER is unset. Dropping it
+      would quietly change what the form does.
+    {% endcomment %}
+    {% if form.remember %}
+      <div class="field field--checkbox">
+        <input class="field__checkbox"
+               type="checkbox"
+               name="{{ form.remember.html_name }}"
+               id="{{ form.remember.id_for_label }}"
+               {% if form.remember.value %}checked{% endif %}>
+        <label class="field__label" for="{{ form.remember.id_for_label }}">Remember me</label>
+      </div>
+    {% endif %}
+
+    <button type="submit" class="btn btn--primary">Log in</button>
+  </form>
+
+  <p class="auth-alt">No account yet? <a href="{% url 'account_signup' %}">Sign up</a></p>
+{% endblock %}

@@ -1,0 +1,437 @@
+/* The project's one stylesheet, implementing _docs/design-system.md.
+ *
+ * Hand-written: no build step, no framework, no icon set, no web font. Every
+ * colour, space, radius, border width and font size painted below comes from a
+ * token in the :root block -- the only numbers outside it are the 480px media
+ * query condition (a breakpoint, not a painted value) and the zeroes that turn
+ * a browser default off.
+ *
+ * It styles what issue #8's pages actually use and stops there: the shell, the
+ * global bar, buttons, forms, messages, and enough of the card for an empty
+ * state. The list, the state pill and the done card belong to #9. */
+
+:root {
+  /* surfaces and text; muted surface is the done card, border a decorative hairline,
+     border-strong the field and quiet-button edges */
+  --color-bg-page: #f4f4f5;   --color-surface-card: #ffffff; --color-surface-muted: #f4f4f5;
+  --color-border: #d4d4d8;    --color-border-strong: #71717a;
+  --color-text-primary: #18181b; --color-text-secondary: #52525b;
+  --color-text-muted: #71717a;   --color-text-on-dark: #ffffff;
+  /* state */
+  --color-state-overdue-surface: #fee2e2;   --color-state-overdue-border: #dc2626;
+  --color-state-overdue-text: #991b1b;
+  --color-state-done-surface: #dcfce7;      --color-state-done-border: #15803d;
+  --color-state-done-text: #166534;
+  --color-state-unclaimed-surface: #dbeafe; --color-state-unclaimed-border: #2563eb;
+  --color-state-unclaimed-text: #1e40af;
+  /* actions */
+  --color-action-primary: #1d4ed8;     --color-action-primary-hover: #1e3a8a;
+  --color-action-danger: #b91c1c;      --color-action-danger-hover: #991b1b;
+  --color-action-disabled-bg: #e4e4e7; --color-focus-ring: #1d4ed8;
+  /* type */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --text-xs: 0.8125rem; --leading-xs: 1.4;    /* 13px pills, strip labels */
+  --text-sm: 0.875rem;  --leading-sm: 1.45;   /* 14px meta, help, errors  */
+  --text-base: 1rem;    --leading-base: 1.5;  /* 16px body and all inputs */
+  --text-lg: 1.125rem;  --leading-lg: 1.35;   /* 18px chore name          */
+  --text-xl: 1.5rem;    --leading-xl: 1.25;   /* 24px page header         */
+  --weight-regular: 400; --weight-semibold: 600;
+  /* space, radius, borders, layout */
+  --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
+  --space-5: 1.5rem;  --space-6: 2rem;   --space-7: 3rem;
+  --radius-sm: 4px; --radius-md: 8px; --radius-pill: 999px;
+  --border-width: 1px; --border-width-thick: 2px;
+  --focus-ring-width: 3px; --focus-ring-offset: 2px;
+  --touch-min: 2.75rem; /* 44px */     --layout-max-width: 34rem; /* 544px */
+
+  /* Added by #8, not in the design system -- see the note below.
+     Text links exist on these pages (the app name, "Log in", "Sign up",
+     "Forgot your password?") and the document names no link colour, while its
+     colour rule requires every painted colour to come from a token. These
+     reuse the accent already in the palette rather than introducing a hue:
+     #1d4ed8 is 6.70:1 on --color-surface-card and 6.10:1 on --color-bg-page,
+     #1e3a8a is 10.36:1 and 9.42:1, all clear of the 4.5:1 floor. Links are
+     underlined as well as coloured, so nothing is carried by colour alone. */
+  --color-action-link: #1d4ed8; --color-action-link-hover: #1e3a8a;
+}
+
+
+/* Document */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-base);
+}
+
+/* The one focus ring, on everything focusable, on every variant. Suppressing
+   an outline without a replacement of at least equal visibility is not allowed
+   anywhere in this project, so no rule below removes it. */
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
+}
+
+a {
+  color: var(--color-action-link);
+  text-decoration: underline;
+}
+
+a:hover {
+  color: var(--color-action-link-hover);
+}
+
+
+/* Layout
+   One column at every width. Above --layout-max-width the column stops growing
+   and the page gutter grows; that is the only difference between phone and
+   desktop. */
+
+.content-column {
+  width: 100%;
+  max-width: var(--layout-max-width);
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+
+@media (min-width: 480px) {
+  .content-column {
+    padding-inline: var(--space-6);
+  }
+}
+
+.page {
+  padding-block: var(--space-5) var(--space-7);
+}
+
+
+/* Global bar
+   Not sticky: it scrolls away, because nothing in it is needed mid-list. The
+   inline padding is the content column's own, which is var(--space-4) at phone
+   widths -- doubling it up would eat the 360px viewport. */
+
+.global-bar {
+  background: var(--color-surface-card);
+  border-bottom: var(--border-width) solid var(--color-border);
+  padding-block: var(--space-2);
+}
+
+.global-bar__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.global-bar__brand {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-min);
+  color: var(--color-text-primary);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-base);
+  text-decoration: none;
+}
+
+.global-bar__brand:hover {
+  color: var(--color-text-primary);
+  text-decoration: underline;
+}
+
+.global-bar__account {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+/* The account's own words, so a long email wraps rather than pushing the page
+   sideways at 360px. */
+.global-bar__identity {
+  min-width: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+  overflow-wrap: anywhere;
+}
+
+.global-bar__logout {
+  margin: 0;
+}
+
+.global-bar__login {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-min);
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+}
+
+
+/* Page header -- rendered by the screen, never by the shell. */
+
+.page-header {
+  margin-block-end: var(--space-6);
+}
+
+.page-header__household {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-xl);
+}
+
+.page-header__date {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+}
+
+.page-heading {
+  margin: 0 0 var(--space-5);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-xl);
+}
+
+
+/* Buttons
+   44x44 minimum including padding, and var(--space-2) between two adjacent
+   tappable things. The transparent border on the filled variants keeps every
+   variant the same height. */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-min);
+  min-width: var(--touch-min);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-md);
+  font-family: inherit;
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-base);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn--primary {
+  background: var(--color-action-primary);
+  color: var(--color-text-on-dark);
+}
+
+.btn--primary:hover {
+  background: var(--color-action-primary-hover);
+  color: var(--color-text-on-dark);
+}
+
+.btn--quiet {
+  background: var(--color-surface-card);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-primary);
+}
+
+.btn--quiet:hover {
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+}
+
+.btn:disabled,
+.btn:disabled:hover {
+  background: var(--color-action-disabled-bg);
+  border-color: transparent;
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+/* In flight: hx-disabled-elt="this" disables the button and HTMX's own class
+   shows the tap landed. No spinner, no label change -- there is no icon set. */
+.btn.htmx-request {
+  cursor: progress;
+}
+
+
+/* Forms */
+
+.form {
+  margin: 0;
+}
+
+.field {
+  margin-block-end: var(--space-4);
+}
+
+.field__label {
+  display: block;
+  margin-block-end: var(--space-1);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-sm);
+}
+
+/* 16px, like all body text: below that, mobile Safari zooms the page when the
+   field takes focus and does not zoom back. */
+.field__input {
+  display: block;
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: var(--space-3);
+  background: var(--color-surface-card);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: var(--text-base);
+  line-height: var(--leading-base);
+}
+
+.field__input[aria-invalid="true"] {
+  border: var(--border-width-thick) solid var(--color-state-overdue-border);
+}
+
+/* var(--space-2) rather than var(--space-1) below the field: allauth's password
+   help text is a link, and two adjacent tappable things need 8px between them. */
+.field__help {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+}
+
+.field__help ul {
+  margin: 0;
+  padding-inline-start: var(--space-5);
+}
+
+/* The message line is the carrier; the red border alone is not. */
+.field__error {
+  margin: var(--space-1) 0 0;
+  color: var(--color-action-danger);
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+}
+
+.field--checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-min);
+}
+
+/* The box is 24px, so the label carries the touch target: clicking anywhere in
+   its 44px height toggles the box beside it. */
+.field--checkbox .field__label {
+  display: flex;
+  align-items: center;
+  min-height: var(--touch-min);
+  margin-block-end: 0;
+}
+
+.field__checkbox {
+  flex: none;
+  width: var(--space-5);
+  height: var(--space-5);
+  margin: 0;
+  accent-color: var(--color-action-primary);
+}
+
+
+/* Message and form-level error blocks
+   One shape, three levels. Each level takes a state's three tokens whole and
+   opens with its level word in 600, so the level is never colour alone. */
+
+.notice {
+  margin-block-end: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid;
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+  line-height: var(--leading-base);
+}
+
+.notice p {
+  margin: 0;
+}
+
+.notice ul {
+  margin: var(--space-1) 0 0;
+  padding-inline-start: var(--space-5);
+}
+
+.notice__level,
+.notice__lead {
+  font-weight: var(--weight-semibold);
+}
+
+.notice--success {
+  background: var(--color-state-done-surface);
+  border-color: var(--color-state-done-border);
+  color: var(--color-state-done-text);
+}
+
+.notice--error {
+  background: var(--color-state-overdue-surface);
+  border-color: var(--color-state-overdue-border);
+  color: var(--color-state-overdue-text);
+}
+
+.notice--info {
+  background: var(--color-state-unclaimed-surface);
+  border-color: var(--color-state-unclaimed-border);
+  color: var(--color-state-unclaimed-text);
+}
+
+
+/* Card
+   Only as much of it as the empty state needs; #9 brings the rest. */
+
+.card {
+  padding: var(--space-4);
+  background: var(--color-surface-card);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.card--empty {
+  color: var(--color-text-secondary);
+  font-size: var(--text-base);
+  line-height: var(--leading-base);
+  text-align: center;
+}
+
+.card--empty p {
+  margin: 0;
+}
+
+
+/* Auth pages */
+
+.auth-alt {
+  margin: var(--space-5) 0 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-sm);
+}
+
+.auth-lead {
+  margin: 0 0 var(--space-5);
+}

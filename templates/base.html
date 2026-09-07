@@ -1,0 +1,93 @@
+{% load static %}<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Chores{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    {% comment %}
+      Pinned to an exact version, with the integrity hash cdnjs publishes for
+      it, so a compromised CDN cannot silently inject script into every page.
+    {% endcomment %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/htmx/2.0.10/htmx.min.js"
+            integrity="sha512-5l65kMjGvrm7EATevCK/SFdMUfIUQfAsQLZY57t7tmsPf5ZtjrzU8wzSBykpRDhqnMwlKISCrxQTURFULsXdpQ=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+            defer></script>
+  </head>
+  <body>
+    {% comment %}
+      The bar knows nothing about households -- no name, no date, no switcher.
+      Identity is the full name or the email, and never the user object itself:
+      User.__str__ falls back to the username, signup never asks for one, and
+      the username allauth generates from an email is not a thing to show a
+      person.
+    {% endcomment %}
+    <header class="global-bar">
+      <div class="global-bar__inner content-column">
+        <a class="global-bar__brand" href="{% url 'chores:home' %}">Chores</a>
+        {% if user.is_authenticated %}
+          <div class="global-bar__account">
+            <span class="global-bar__identity">{% firstof user.get_full_name user.email %}</span>
+            <form class="global-bar__logout" method="post" action="{% url 'account_logout' %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn--quiet">Log out</button>
+            </form>
+          </div>
+        {% else %}
+          <a class="global-bar__login" href="{% url 'account_login' %}">Log in</a>
+        {% endif %}
+      </div>
+    </header>
+
+    <main class="page content-column">
+      {% comment %}
+        Messages sit below the bar and above the page, one block per message,
+        each opening with its level word so the level is never colour alone.
+        The region stays in the document when it is empty: the error listener
+        at the foot of this file appends into it.
+      {% endcomment %}
+      <div class="messages" id="messages" aria-live="polite">
+        {% for message in messages %}
+          {% if message.level_tag == "success" %}
+            <div class="notice notice--success"><p><span class="notice__level">Success</span>. {{ message }}</p></div>
+          {% elif message.level_tag == "error" or message.level_tag == "warning" %}
+            <div class="notice notice--error"><p><span class="notice__level">Error</span>. {{ message }}</p></div>
+          {% else %}
+            <div class="notice notice--info"><p><span class="notice__level">Note</span>. {{ message }}</p></div>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      {% block content %}{% endblock %}
+    </main>
+
+    {% comment %}
+      The only script in the project besides HTMX itself. HTMX does not swap on
+      a genuine 4xx or 5xx, so a failed action would otherwise change nothing
+      on screen. Nothing in the MVP fires this yet.
+    {% endcomment %}
+    <script>
+      (function () {
+        function showRequestError() {
+          var region = document.getElementById("messages");
+          if (!region) {
+            return;
+          }
+          var block = document.createElement("div");
+          block.className = "notice notice--error";
+          var line = document.createElement("p");
+          var level = document.createElement("span");
+          level.className = "notice__level";
+          level.textContent = "Error";
+          line.appendChild(level);
+          line.appendChild(document.createTextNode(". That didn't save. Try again."));
+          block.appendChild(line);
+          region.appendChild(block);
+        }
+        document.body.addEventListener("htmx:responseError", showRequestError);
+        document.body.addEventListener("htmx:sendError", showRequestError);
+      })();
+    </script>
+  </body>
+</html>

@@ -74,14 +74,25 @@ Apply migrations:
 uv run python manage.py migrate
 ```
 
+Collect the static files:
+
+```bash
+uv run python manage.py collectstatic --no-input
+```
+
+With `DEBUG=False`, static files are served from a hashed manifest, so any page
+carrying a `{% static %}` tag — which is every page, they all load
+`css/app.css` — is a 500 until this has been run. `runserver` with `DEBUG=True`
+does not need it. Making it a deploy step is issue #32.
+
 Start the server:
 
 ```bash
 uv run python manage.py runserver
 ```
 
-The app is then at http://127.0.0.1:8000/, currently showing the placeholder
-page. To look at the admin, create a superuser first:
+The app is then at http://127.0.0.1:8000/, which asks you to log in and then
+shows the landing page. To look at the admin, create a superuser first:
 
 ```bash
 uv run python manage.py createsuperuser

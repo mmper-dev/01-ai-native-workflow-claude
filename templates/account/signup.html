@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% comment %}
+  Extends the project shell directly -- see the note in account/login.html.
+  Three fields only, matching ACCOUNT_SIGNUP_FIELDS. There is no username
+  field: allauth generates and de-duplicates the username AbstractUser still
+  requires, so two people whose emails share a local part both get through.
+{% endcomment %}
+
+{% block title %}Sign up{% endblock %}
+
+{% block content %}
+  <h1 class="page-heading">Sign up</h1>
+
+  <form class="form" method="post" action="{% url 'account_signup' %}">
+    {% csrf_token %}
+    {{ redirect_field }}
+
+    {% if form.errors %}
+      <div class="notice notice--error" role="alert">
+        <p><span class="notice__lead">Something needs fixing.</span></p>
+        <ul>
+          {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+          {% for field in form %}
+            {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+
+    <div class="field">
+      <label class="field__label" for="{{ form.email.id_for_label }}">Email</label>
+      <input class="field__input"
+             type="email"
+             name="{{ form.email.html_name }}"
+             id="{{ form.email.id_for_label }}"
+             value="{{ form.email.value|default_if_none:'' }}"
+             autocomplete="email"
+             required
+             {% if form.email.errors %}aria-invalid="true" aria-describedby="{{ form.email.id_for_label }}-error"{% endif %}>
+      {% if form.email.errors %}
+        <p class="field__error" id="{{ form.email.id_for_label }}-error">{{ form.email.errors|join:" " }}</p>
+      {% endif %}
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="{{ form.password1.id_for_label }}">Password</label>
+      <input class="field__input"
+             type="password"
+             name="{{ form.password1.html_name }}"
+             id="{{ form.password1.id_for_label }}"
+             autocomplete="new-password"
+             required
+             {% if form.password1.errors %}aria-invalid="true" aria-describedby="{{ form.password1.id_for_label }}-error"{% endif %}>
+      {% if form.password1.errors %}
+        <p class="field__error" id="{{ form.password1.id_for_label }}-error">{{ form.password1.errors|join:" " }}</p>
+      {% endif %}
+      {% if form.password1.help_text %}
+        <div class="field__help">{{ form.password1.help_text|safe }}</div>
+      {% endif %}
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="{{ form.password2.id_for_label }}">Confirm password</label>
+      <input class="field__input"
+             type="password"
+             name="{{ form.password2.html_name }}"
+             id="{{ form.password2.id_for_label }}"
+             autocomplete="new-password"
+             required
+             {% if form.password2.errors %}aria-invalid="true" aria-describedby="{{ form.password2.id_for_label }}-error"{% endif %}>
+      {% if form.password2.errors %}
+        <p class="field__error" id="{{ form.password2.id_for_label }}-error">{{ form.password2.errors|join:" " }}</p>
+      {% endif %}
+    </div>
+
+    <button type="submit" class="btn btn--primary">Sign up</button>
+  </form>
+
+  <p class="auth-alt">Already have an account? <a href="{% url 'account_login' %}">Log in</a></p>
+{% endblock %}

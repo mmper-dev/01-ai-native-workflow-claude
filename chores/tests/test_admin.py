@@ -49,20 +49,9 @@ def utc(settings):
     settings.TIME_ZONE = "UTC"
 
 
-@pytest.fixture(autouse=True)
-def unhashed_static(settings):
-    """Serve admin CSS without a staticfiles manifest.
-
-    The project stores static files with WhiteNoise's manifest backend, which
-    skips hashing while `DEBUG` is on -- so `runserver` is fine -- but the test
-    runner forces `DEBUG=False`, and every admin template starts with
-    `{% static 'admin/css/base.css' %}`. Without this, these tests would only
-    be asserting that nobody has run `collectstatic`.
-    """
-    settings.STORAGES = {
-        **settings.STORAGES,
-        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
-    }
+# `unhashed_static`, which used to live here, is now an autouse fixture in
+# chores/tests/conftest.py -- every module that renders a template needs it, not
+# just this one.
 
 
 @pytest.fixture

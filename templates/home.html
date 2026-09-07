@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% comment %}
+  The landing page. The page header block is the screen's, not the shell's:
+  base.html knows nothing about households.
+{% endcomment %}
+
+{% block title %}Chores{% endblock %}
+
+{% block content %}
+  {% if household %}
+    <header class="page-header">
+      <h1 class="page-header__household">{{ household.name }}</h1>
+      <p class="page-header__date">{{ today }}</p>
+    </header>
+
+    {# #9 renders what is actually owed here. #}
+    <div class="card card--empty">
+      <p>Nothing is due right now.</p>
+    </div>
+  {% else %}
+    {% comment %}
+      Signing up creates an account and nothing more. It stays inert until an
+      admin adds a membership for it in the Django admin.
+    {% endcomment %}
+    <div class="card card--empty">
+      <p>You're not in a household yet. A household admin has to add you before you'll see any chores.</p>
+    </div>
+  {% endif %}
+{% endblock %}
